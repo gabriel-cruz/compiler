@@ -15,9 +15,27 @@ public class LexicAnalyser {
 	}
 	
 	public void analyseCode(List<String> code){
-		for(Symbol regex : symbolsTable) {
-			System.out.println(regex.getSymbol());
+		int lineNumber = 0;
+		code = removeSpacesAndComments(code);
+		for(String line : code){
+			System.out.println("line: " + lineNumber + " text: " + line);
+			lineNumber++;
 		}
+	}
+	
+	private List<String> removeSpacesAndComments(List<String> code){
+		List<String> result = new ArrayList<String>();
+		boolean isLineComment = false;
+		for(String line : code){
+			String[] notWithSpace = line.split("[ \t]");
+			int index = symbolsTable.indexOf(new Symbol(",CL"));
+			String regex = symbolsTable.get(index).getRegex();
+			for(String check : notWithSpace){
+				if(check.matches(regex)) isLineComment = true;
+				if(!isLineComment) result.add(check);
+			}
+		}
+		return result;
 	}
 	
 }
