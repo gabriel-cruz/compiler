@@ -10,9 +10,9 @@ public class Main {
 
 	public static void main(String[] args) {
 		//Pega os arquivos no diretório raíz
-		File[] files =  Files.getFiles("C:\\Users\\lsjsa\\OneDrive\\Documentos\\Java\\LexicAnalyzer\\entradas");
-		List<String> infoSymbol = Files.getContentFile(new File("C:\\Users\\lsjsa\\OneDrive\\Documentos\\Java\\LexicAnalyzer\\util\\regex.txt"));
-		LexicAnalyser analyser = new LexicAnalyser(infoSymbol);
+		File[] files =  Files.getFiles("D:\\gabri\\Documents\\Projetos\\Java\\compiler\\entradas");
+		//List<String> infoSymbol = Files.getContentFile(new File("D:\\gabri\\Documents\\Projetos\\Java\\compiler\\util"));
+		LexicAnalyser analyser = new LexicAnalyser(/*infoSymbol*/);
 		for(File file : files) {
 			List<String> contentFile = Files.getContentFile(file);
 			analyser.analyseCode(contentFile);
