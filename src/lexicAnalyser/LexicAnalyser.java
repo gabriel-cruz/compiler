@@ -4,45 +4,57 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LexicAnalyser {
-
-	//List<Symbol> symbolsTable = new ArrayList<Symbol>();
 	
-	public LexicAnalyser(/*List<String> infoSymbol*/){
-		/*for(String symbol : infoSymbol) {
-			//System.out.println(symbol);
-			symbolsTable.add(new Symbol(symbol));
-		}*/
+	public LexicAnalyser(){
+		
 	}
 	
 	public void analyseCode(List<String> code){
-		int lineNumber = 0;
-		int initialPointer = 0;
-		int finalPointer = 0;
-		
-		code = removeSpacesAndComments(code);
+		int lineNumber = 0; //variavel que controla a linha do codigo no arquivo de entrada
+		int initialPointer,finalPointer; //variavel que auxilia na analise dos lexemas
+		code = removeSpacesAndComments(code); //remove os comentarios e os espaços em brancos
 		for(String line : code){
-			System.out.println("line: " + lineNumber + " text: " + line);
-			lineNumber++;
-			
-			while(finalPointer < line.length()) {
-				char peek = line.charAt(finalPointer);
-				
-				if(Character.isLetter(peek) || Character.isDigit(peek)){
-					finalPointer += 1;
-				}else {
-					//pegar a substring do index initialpointer até o finalpointer -1 e analisar o token
-					switch(peek) {
-						/*caso encontre um símbolo, o initialpointer vai para esse simbolo e verifica caso tenha outro símbolo
-						
-						*/
-					case '+':
-						
+			//no inicio do bloco 
+			initialPointer = 0;
+			finalPointer = 0; 
+			for(int i = 0; i < line.length(); i++) {
+				//caracter achado no index com o número igual ao da variavel finalPointer
+				char peek = line.charAt(finalPointer); 
+				if(Character.isLetter(peek)||Character.isDigit(peek)||peek == '_'){
+					//se o caracter for uma letra ou numero avança o finalPointer
+					if(i == line.length() - 1) {
+						//o metodo substring no segundo argumento é o index - 1
+						String lexeme = line.substring(initialPointer, finalPointer+1);
+						System.out.println("lexeme: " + lexeme);
 					}
 				}
+				else {
+					//não achando letra ou número, realiza o algoritmo da analise do lexema
+					if(initialPointer !=  finalPointer) {
+						//o metodo substring no segundo argumento é o index - 1
+						String lexeme = line.substring(initialPointer, finalPointer);
+						System.out.println("lexeme: " + lexeme);
+					}
+					//não achando letra ou número, realiza o algoritmo da analise do lexema
+					//realizar a comparação entre os regex
+					if(Character.toString(peek).matches("[+/*-]")){ //detecta simbolos de operações aritmetricas
+						System.out.println("notNumberOrLetter: " + peek);
+					}//
+					else if(Character.toString(peek).matches("[=><]")) {//detecta simbolos de operações relacionais
+						System.out.println("notNumberOrLetter: " + peek);
+					}
+					else if(Character.toString(peek).matches("[&!|]")){ //detecta simbolos de operações logicos
+						System.out.println("notNumberOrLetter: " + peek);
+					}else if(Character.toString(peek).matches("[\"\"]")) {
+						System.out.println("string");
+					}
+					//o initialPointer avança para o próximo caracter após a detecção de um simbolo
 					
-				
+					initialPointer = finalPointer + 1;
+				}
+				finalPointer+=1;
 			}
-			
+			lineNumber++;
 		}
 	}
 	
@@ -54,16 +66,11 @@ public class LexicAnalyser {
 		
 		for(String line : code){
 			String[] notWithSpace = line.split("[ \t]");
-			
-			//int index = symbolsTable.indexOf(new Symbol(",CL"));
-			//String regex = symbolsTable.get(index).getRegex();
 			for(String check : notWithSpace){
-				if(check.matches("^[//]{2}")) isLineComment = true;
-								
+				if(check.matches("^[/]{2}[\\s\\S]*"))isLineComment = true;			
 				else if(check.matches("^[/][*][\\s\\S]*")) isBlockComment = true;
 				else if(check.matches("^[\\s\\S]+[*][/]")) isBlockComment = false;
-				
-				if(!isLineComment && !isBlockComment) result.add(check);
+				if(!isLineComment && !isBlockComment)	result.add(check);
 			}
 		}
 		return result;
