@@ -10,70 +10,252 @@ public class LexicAnalyser {
 	}
 	
 	public void analyseCode(List<String> code){
+		
 		int lineNumber = 0; //variavel que controla a linha do codigo no arquivo de entrada
 		int initialPointer,finalPointer; //variavel que auxilia na analise dos lexemas
-		code = removeSpacesAndComments(code); //remove os comentarios e os espaços em brancos
+		boolean isLineComment;
+		boolean isBlockComment = false;
 		for(String line : code){
 			//no inicio do bloco 
 			initialPointer = 0;
-			finalPointer = 0; 
-			for(int i = 0; i < line.length(); i++) {
+			finalPointer = 0;
+			isLineComment = false;			
+			while(finalPointer < line.length()) {
+				//desconsidera o resto do loop, devido ao fato do restante do código ser comentário em linha
+				if(isLineComment) break;
+				//se o bloco de comentário foi iniciado entra nessa condição
+				if(isBlockComment) {
+					//pega o próximo char
+					char check = line.charAt(finalPointer);
+					//verifica se é o char *
+					if(check == '*'){
+						//verifica se é a representação do fechamento do comentário em bloco
+						if(blockComment(finalPointer, line)) {
+							isBlockComment = false;
+							//vai para o index fora do comentário em bloco
+							finalPointer += 2;
+							//se chegar no final da linha para o laço de repetição
+							if(finalPointer == line.length()) break;
+							else initialPointer = finalPointer;
+						}
+					}else finalPointer++; //incrementa o index
+					continue;
+				}
 				//caracter achado no index com o número igual ao da variavel finalPointer
-				char peek = line.charAt(finalPointer); 
-				if(Character.isLetter(peek)||Character.isDigit(peek)||peek == '_'){
-					//se o caracter for uma letra ou numero avança o finalPointer
-					if(i == line.length() - 1) {
-						//o metodo substring no segundo argumento é o index - 1
-						String lexeme = line.substring(initialPointer, finalPointer+1);
-						System.out.println("lexeme: " + lexeme);
-					}
+				char peek = line.charAt(finalPointer);
+				//realiza uma determinada ação se detectar uma letra como inicio no bloco
+				if(peek == ' ') { //trata o espaço
+					finalPointer+=1;
+					initialPointer = finalPointer;
+				}
+				else if(Character.isLetter(peek)){ //automato para identificadores e palavras-chaves
+					//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
+					finalPointer = automateIdentiferOrKeyWord(finalPointer, line);
+					String lexeme = line.substring(initialPointer, finalPointer); //lexeme é a variavel a ser analisada
+					System.out.println("lexeme: " + lexeme);
+					initialPointer = finalPointer; //atualiza o index de começo
+				}
+				else if(Character.isDigit(peek)){//automato para números
+					//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
+					finalPointer = automateNumber(finalPointer, line);
+					String lexeme = line.substring(initialPointer, finalPointer); //lexeme é a variavel a ser analisada
+					System.out.println("lexeme: " + lexeme);
+					initialPointer = finalPointer;//atualiza o index de começo
 				}
 				else {
-					//não achando letra ou número, realiza o algoritmo da analise do lexema
-					if(initialPointer !=  finalPointer) {
-						//o metodo substring no segundo argumento é o index - 1
+					//não achando identificador ou palavra-chave
+					//se detectou um simbolo aritmetrico executa o automato responsavel por essa parte
+					if(Character.toString(peek).matches("[+/*-]")){ //detecta simbolos de operações aritmetricas
+						//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
+						finalPointer = automateAritOperator(finalPointer, line);
+						String lexeme = line.substring(initialPointer, finalPointer); //lexeme é a variavel a ser analisada
+						if(lexeme.equals("/")){
+							//verifica se é o comentário em linha, recebe da função true ou false
+							isLineComment = lineComment(finalPointer-1, line);
+							if(isLineComment) continue; //executa o próximo loop
+							//verifica se é um comentário em bloco, recebe da função true ou false
+							isBlockComment = blockComment(finalPointer-1, line);
+							if(isBlockComment) {
+								finalPointer += 1;//incrementa o index
+								continue;//executa o próximo loop
+							}
+							//pega a / como operador aritmétrico
+							System.out.println("lexeme: " + lexeme);
+						}else{
+							//pega o lexema do operador aritmétrico
+							System.out.println("lexeme: " + lexeme);
+						}
+						initialPointer = finalPointer;//atualiza o index de começo
+					}
+					else if(Character.toString(peek).matches("[;,{}.()[\\\\]]")){ //detecta simbolos de operadores delimitadores
+						System.out.println("lexeme: " + peek); //detectação dos simbolos de delimitadores
+						finalPointer+=1;
+						initialPointer = finalPointer;//atualiza o index de começo
+					}
+					else if(Character.toString(peek).matches("[=><]")) {//detecta simbolos de operações relacionais
+						//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
+						finalPointer = automateRelatOperator(finalPointer, line);
 						String lexeme = line.substring(initialPointer, finalPointer);
 						System.out.println("lexeme: " + lexeme);
-					}
-					//não achando letra ou número, realiza o algoritmo da analise do lexema
-					//realizar a comparação entre os regex
-					if(Character.toString(peek).matches("[+/*-]")){ //detecta simbolos de operações aritmetricas
-						System.out.println("notNumberOrLetter: " + peek);
-					}//
-					else if(Character.toString(peek).matches("[=><]")) {//detecta simbolos de operações relacionais
-						System.out.println("notNumberOrLetter: " + peek);
+						initialPointer = finalPointer;//atualiza o index de começo
 					}
 					else if(Character.toString(peek).matches("[&!|]")){ //detecta simbolos de operações logicos
-						System.out.println("notNumberOrLetter: " + peek);
-					}else if(Character.toString(peek).matches("[\"\"]")) {
-						System.out.println("string");
+						//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
+						finalPointer = automateLogicOperator(finalPointer, line);
+						String lexeme = line.substring(initialPointer, finalPointer);
+						System.out.println("lexeme: " + lexeme);
+						initialPointer = finalPointer; //atualiza o index de começo
+					}else if(Character.toString(peek).matches("[\"]")){
+						//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
+						//finalPointer+1, pois se passa o primeiro caracter após as "
+						finalPointer = automateString(finalPointer+1, line);
+						if(finalPointer == -1) { //se detectou erro na string
+							System.out.println("Erro na string, não finalizou a cadeia com \" ");
+							break;
+						}else {//caso a cadeia de string esteja correta
+							String lexeme = line.substring(initialPointer, finalPointer);
+							System.out.println("lexeme: " + lexeme);
+							initialPointer = finalPointer; //atualiza o index de começo
+						}
 					}
-					//o initialPointer avança para o próximo caracter após a detecção de um simbolo
-					
-					initialPointer = finalPointer + 1;
 				}
-				finalPointer+=1;
 			}
 			lineNumber++;
 		}
 	}
 	
-	private List<String> removeSpacesAndComments(List<String> code){
-		List<String> result = new ArrayList<String>();
-		boolean isLineComment = false;
-		boolean isBlockComment = false;
-		//boolean isBlockFinal = false;
-		
-		for(String line : code){
-			String[] notWithSpace = line.split("[ \t]");
-			for(String check : notWithSpace){
-				if(check.matches("^[/]{2}[\\s\\S]*"))isLineComment = true;			
-				else if(check.matches("^[/][*][\\s\\S]*")) isBlockComment = true;
-				else if(check.matches("^[\\s\\S]+[*][/]")) isBlockComment = false;
-				if(!isLineComment && !isBlockComment)	result.add(check);
+	private int automateIdentiferOrKeyWord(int pointer, String analyse){
+		char peek;
+		boolean finishedArray = false;
+		//laço responsavel por detectar a cadeia de caracaters até achar um simbolo indevido
+		do {
+			if(pointer >= analyse.length()) { //verifica se chegou ao fim do buffer
+				finishedArray = true;
+				break;
+			}
+			peek = analyse.charAt(pointer);
+			pointer++;
+		}while(Character.isLetter(peek)||Character.isDigit(peek)||peek == '_');
+		if(finishedArray) return pointer;
+		return pointer - 1; // devido ao pós incremento no final do laço do
+	}
+	
+	private int automateNumber(int pointer, String analyse){
+		char peek;
+		boolean finishedArray = false;
+		//laço responsavel por detectar a cadeia de caracaters até achar um simbolo indevido ou letra
+		do {
+			if(pointer >= analyse.length()) {//verifica se chegou ao fim do buffer
+				finishedArray = true;
+				break;
+			}
+			peek = analyse.charAt(pointer);
+			pointer++;
+		}while(Character.isDigit(peek)||peek == '.');
+		if(finishedArray) return pointer;
+		return pointer - 1; // devido ao pós incremento no final do laço do
+	}
+	
+	private int automateString(int pointer, String analyse){
+		char peek;
+		boolean finishedString = false;
+		//laço responsavel por detectar a cadeia que representa uma string, condição de parada é achar "
+		do {
+			if(pointer >= analyse.length()) break; //verifica se chegou ao fim do buffer
+			peek = analyse.charAt(pointer);
+			//condição que trata a questão de aceitar \" na string
+			if(Character.toString(peek).matches("\\\\")){
+				char ahead = analyse.charAt(pointer+1);
+				if(Character.toString(ahead).matches("[\"]")) {
+					 pointer+=2;
+					 continue;
+				}else {
+					 pointer++;
+					 continue;
+				}
+			}else if(Character.toString(peek).matches("[\"]")) {
+				finishedString = true;
+			}
+			pointer++;
+		}while( !finishedString);
+		if(finishedString)return pointer;
+		return -1; // caso a string esteja formatada errada retorna -1
+	}
+	
+	private int automateAritOperator(int pointer, String analyse){
+		char peek = analyse.charAt(pointer);
+		if(peek == '+' || peek == '-'){
+			if(pointer + 1 < analyse.length()) { //verifica se chegou ao fim do buffer
+				char ahead = analyse.charAt(pointer+1);
+				if(ahead == peek) { //verifica questao ++ --
+					return pointer+2;
+				}else {
+					return pointer+1;
+				}
 			}
 		}
-		return result;
+		return pointer+1;
+	}
+	
+	private int automateRelatOperator(int pointer, String analyse){
+		char peek = analyse.charAt(pointer);
+		if(peek == '>' || peek == '=' || peek == '<' || peek == '!'){
+			//verifica >= <= == !=
+			if(pointer + 1 < analyse.length()) { //verifica se chegou ao fim do buffer
+				char ahead = analyse.charAt(pointer+1);
+				if(ahead == '=') {
+					return pointer+2;
+				}else {
+					return pointer+1;
+				}
+			}
+		}
+		return pointer+1;
+	}
+	
+	private int automateLogicOperator(int pointer, String analyse){
+		char peek = analyse.charAt(pointer);
+		//verifica && ||
+		if(peek == '&' || peek == '|'){
+			if(pointer + 1 < analyse.length()) {
+				char ahead = analyse.charAt(pointer+1);
+				return ahead == peek ? pointer+=2 : pointer++;
+			}
+		}
+		return pointer + 1;
+	}
+	
+	
+	private boolean lineComment(int pointer, String analyse) {
+		char peek = analyse.charAt(pointer);
+		//verifica a ocorrência de //
+		if(pointer + 1 < analyse.length()) {
+			char ahead = analyse.charAt(pointer+1);
+			if(ahead == peek) {
+				return true;
+			}else {
+				return false;
+			}
+		}
+		return false;
+	}
+	
+	
+	private boolean blockComment(int pointer, String analyse) {
+		char peek = analyse.charAt(pointer);
+		//verifica a ocorência de /*
+		if(pointer + 1 < analyse.length()) {
+			char ahead = analyse.charAt(pointer+1);
+			if(peek == '/') {
+				if(ahead == '*') return true;
+				else return false;
+			}
+			if(peek == '*'){
+				if(ahead == '/') return true;
+				else return false;
+			}
+		}
+		return false;
 	}
 	
 }
