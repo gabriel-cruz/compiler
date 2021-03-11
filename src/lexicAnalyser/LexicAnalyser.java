@@ -44,7 +44,7 @@ public class LexicAnalyser {
 				//caracter achado no index com o número igual ao da variavel finalPointer
 				char peek = line.charAt(finalPointer);
 				//realiza uma determinada ação se detectar uma letra como inicio no bloco
-				if(peek == ' ') { //trata o espaço
+				if(peek == ' ' || peek == '\t') { //trata o espaço
 					finalPointer+=1;
 					initialPointer = finalPointer;
 				}
@@ -143,6 +143,7 @@ public class LexicAnalyser {
 	private int automateNumber(int pointer, String analyse){
 		char peek;
 		boolean finishedArray = false;
+		int foundDot = 0;
 		//laço responsavel por detectar a cadeia de caracaters até achar um simbolo indevido ou letra
 		do {
 			if(pointer >= analyse.length()) {//verifica se chegou ao fim do buffer
@@ -150,8 +151,9 @@ public class LexicAnalyser {
 				break;
 			}
 			peek = analyse.charAt(pointer);
+			if(peek == '.') foundDot++;
 			pointer++;
-		}while(Character.isDigit(peek)||peek == '.');
+		}while(Character.isDigit(peek)||foundDot<2);
 		if(finishedArray) return pointer;
 		return pointer - 1; // devido ao pós incremento no final do laço do
 	}
