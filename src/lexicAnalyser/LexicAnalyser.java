@@ -1,20 +1,25 @@
 package lexicAnalyser;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class LexicAnalyser {
+	public ReservedWord keyWords;
 	
 	public LexicAnalyser(){
-		
+		keyWords = new ReservedWord();
 	}
 	
-	public void analyseCode(List<String> code){
+	
+	public List<Token> analyseCode(List<String> code){
 		
 		int lineNumber = 0; //variavel que controla a linha do codigo no arquivo de entrada
 		int initialPointer,finalPointer; //variavel que auxilia na analise dos lexemas
 		boolean isLineComment;
 		boolean isBlockComment = false;
+		List<Token> tokens = new ArrayList<Token>();
+		
 		for(String line : code){
 			//no inicio do bloco 
 			initialPointer = 0;
@@ -54,6 +59,13 @@ public class LexicAnalyser {
 					String lexeme = line.substring(initialPointer, finalPointer); //lexeme é a variavel a ser analisada
 					System.out.println("lexeme: " + lexeme);
 					initialPointer = finalPointer; //atualiza o index de começo
+					
+					if(keyWords.words.contains(lexeme)) {
+						tokens.add(new Word(lexeme, Tag.PRE, lineNumber));
+					}
+					else {
+						tokens.add(new Word(lexeme, Tag.IDE, lineNumber));
+					}
 				}
 				else if(Character.isDigit(peek)){//automato para números
 					//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
@@ -61,6 +73,8 @@ public class LexicAnalyser {
 					String lexeme = line.substring(initialPointer, finalPointer); //lexeme é a variavel a ser analisada
 					System.out.println("lexeme: " + lexeme);
 					initialPointer = finalPointer;//atualiza o index de começo
+					
+					tokens.add(new Number(Integer.parseInt(lexeme), lineNumber));
 				}
 				else {
 					//não achando identificador ou palavra-chave
@@ -81,9 +95,11 @@ public class LexicAnalyser {
 							}
 							//pega a / como operador aritmétrico
 							System.out.println("lexeme: " + lexeme);
+							tokens.add(new Word(lexeme, Tag.ART, lineNumber));
 						}else{
 							//pega o lexema do operador aritmétrico
 							System.out.println("lexeme: " + lexeme);
+							tokens.add(new Word(lexeme, Tag.ART, lineNumber));
 						}
 						initialPointer = finalPointer;//atualiza o index de começo
 					}
@@ -91,37 +107,58 @@ public class LexicAnalyser {
 						System.out.println("lexeme: " + peek); //detectação dos simbolos de delimitadores
 						finalPointer+=1;
 						initialPointer = finalPointer;//atualiza o index de começo
+						tokens.add(new Word(Character.toString(peek), Tag.DEL, lineNumber));
 					}
 					else if(Character.toString(peek).matches("[=><]")) {//detecta simbolos de operações relacionais
 						//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
 						finalPointer = automateRelatOperator(finalPointer, line);
 						String lexeme = line.substring(initialPointer, finalPointer);
 						System.out.println("lexeme: " + lexeme);
+						tokens.add(new Word(lexeme, Tag.REL, lineNumber));
 						initialPointer = finalPointer;//atualiza o index de começo
 					}
 					else if(Character.toString(peek).matches("[&!|]")){ //detecta simbolos de operações logicos
 						//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
-						finalPointer = automateLogicOperator(finalPointer, line);
+						/*int aux = automateLogicOperator(finalPointer, line);
+						if(aux == -1) {
+							tokens.add(new Word("Erro de operador: " + Character.toString(peek), Tag.OpMF, lineNumber));
+							finalPointer++;
+							continue;
+						}*/
 						String lexeme = line.substring(initialPointer, finalPointer);
 						System.out.println("lexeme: " + lexeme);
+						tokens.add(new Word(lexeme, Tag.LOG, lineNumber));
 						initialPointer = finalPointer; //atualiza o index de começo
 					}else if(Character.toString(peek).matches("[\"]")){
 						//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
 						//finalPointer+1, pois se passa o primeiro caracter após as "
 						finalPointer = automateString(finalPointer+1, line);
 						if(finalPointer == -1) { //se detectou erro na string
+							String lexeme = line.substring(initialPointer, line.length());
 							System.out.println("Erro na string, não finalizou a cadeia com \" ");
+							tokens.add(new Word(lexeme, Tag.CMF, lineNumber));
 							break;
 						}else {//caso a cadeia de string esteja correta
 							String lexeme = line.substring(initialPointer, finalPointer);
 							System.out.println("lexeme: " + lexeme);
+							tokens.add(new Word(lexeme, Tag.CAD, lineNumber));
 							initialPointer = finalPointer; //atualiza o index de começo
 						}
+					}
+					
+					else {
+						tokens.add(new Word("Caractere Inválido: " + Character.toString(peek), Tag.SIB, lineNumber));
+						finalPointer++;
 					}
 				}
 			}
 			lineNumber++;
 		}
+		if(isBlockComment) {
+			tokens.add(new Word("Erro de comentário", Tag.CoMF, lineNumber));
+		}
+		
+		return tokens;
 	}
 	
 	private int automateIdentiferOrKeyWord(int pointer, String analyse){
@@ -153,7 +190,7 @@ public class LexicAnalyser {
 			peek = analyse.charAt(pointer);
 			if(peek == '.') foundDot++;
 			pointer++;
-		}while(Character.isDigit(peek)||foundDot<2);
+		}while(Character.isDigit(peek));
 		if(finishedArray) return pointer;
 		return pointer - 1; // devido ao pós incremento no final do laço do
 	}
@@ -221,7 +258,8 @@ public class LexicAnalyser {
 		if(peek == '&' || peek == '|'){
 			if(pointer + 1 < analyse.length()) {
 				char ahead = analyse.charAt(pointer+1);
-				return ahead == peek ? pointer+=2 : pointer++;
+				
+				return ahead == peek ? pointer+=2 : -1;
 			}
 		}
 		return pointer + 1;

@@ -1,11 +1,15 @@
 package manager;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import lexicAnalyser.Token;
 
 public class Files {
 
@@ -33,6 +37,19 @@ public class Files {
 		}catch(IOException e){
 			System.out.println(e.getMessage());
 			return null;
+		}
+	}
+	
+	static public void setContentFile(List<Token> tokens, String path) {
+		List<String> lines = new ArrayList<String>();
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(path))){ //try-catch com iniciação
+			for(Token token : tokens) {
+				bw.write(token.toString());
+			}
+			bw.close(); //fecha o arquivo
+			
+		}catch(IOException e){
+			System.out.println(e.getMessage());
 		}
 	}
 	
