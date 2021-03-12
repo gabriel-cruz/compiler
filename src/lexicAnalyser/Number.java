@@ -8,7 +8,10 @@ public class Number extends Token{
 		value = v;
 	}
 	
+	
 	public String toString() { 
-		return "" + super.line + "-" + super.tag + "-" + value + "\n"; 
+		return "<" + super.line + "," + super.getSymbol() + "," + value + ">\n"; 
 	}
 }
+
+

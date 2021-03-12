@@ -1,5 +1,4 @@
 ult int test
-@
-&
+@ |teste
 var 5 + 9 = 10
 "teste

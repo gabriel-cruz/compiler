@@ -119,12 +119,14 @@ public class LexicAnalyser {
 					}
 					else if(Character.toString(peek).matches("[&!|]")){ //detecta simbolos de operações logicos
 						//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
-						/*int aux = automateLogicOperator(finalPointer, line);
+						int aux = automateLogicOperator(finalPointer, line);
 						if(aux == -1) {
+							System.out.println("Erro de operador logico ");
 							tokens.add(new Word("Erro de operador: " + Character.toString(peek), Tag.OpMF, lineNumber));
 							finalPointer++;
+							initialPointer = finalPointer;
 							continue;
-						}*/
+						}else finalPointer = aux;
 						String lexeme = line.substring(initialPointer, finalPointer);
 						System.out.println("lexeme: " + lexeme);
 						tokens.add(new Word(lexeme, Tag.LOG, lineNumber));
@@ -258,9 +260,9 @@ public class LexicAnalyser {
 		if(peek == '&' || peek == '|'){
 			if(pointer + 1 < analyse.length()) {
 				char ahead = analyse.charAt(pointer+1);
-				
 				return ahead == peek ? pointer+=2 : -1;
 			}
+			else return -1;
 		}
 		return pointer + 1;
 	}

@@ -53,4 +53,9 @@ public class Files {
 		}
 	}
 	
+	static public int numberFile(String path){
+		String number = path.replaceAll("[^0-9]","");
+		return Integer.parseInt(number);
+	}
+	
 }

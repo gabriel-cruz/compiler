@@ -1,0 +1,13 @@
+<0,IDE,ult>
+<0,PRE,int>
+<0,IDE,test>
+<1,SIB,Caractere Inválido: @>
+<1,OpMF,Erro de operador: |>
+<1,IDE,teste>
+<2,PRE,var>
+<2,NRO,5>
+<2,ART,+>
+<2,NRO,9>
+<2,REL,=>
+<2,NRO,10>
+<3,CMF,"teste>
