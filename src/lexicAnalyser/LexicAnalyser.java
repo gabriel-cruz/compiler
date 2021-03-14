@@ -5,10 +5,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class LexicAnalyser {
+	
 	public ReservedWord keyWords;
+	public int qntErrors;
 	
 	public LexicAnalyser(){
 		keyWords = new ReservedWord();
+		qntErrors = 0;
 	}
 	
 	
@@ -57,10 +60,9 @@ public class LexicAnalyser {
 					//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
 					finalPointer = automateIdentiferOrKeyWord(finalPointer, line);
 					String lexeme = line.substring(initialPointer, finalPointer); //lexeme é a variavel a ser analisada
-					System.out.println("lexeme: " + lexeme);
 					initialPointer = finalPointer; //atualiza o index de começo
 					
-					if(keyWords.words.contains(lexeme)) {
+					if(ReservedWord.words.contains(lexeme)) {
 						tokens.add(new Word(lexeme, Tag.PRE, lineNumber));
 					}
 					else {
@@ -71,9 +73,7 @@ public class LexicAnalyser {
 					//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
 					finalPointer = automateNumber(finalPointer, line);
 					String lexeme = line.substring(initialPointer, finalPointer); //lexeme é a variavel a ser analisada
-					System.out.println("lexeme: " + lexeme);
 					initialPointer = finalPointer;//atualiza o index de começo
-					
 					tokens.add(new Number(Integer.parseInt(lexeme), lineNumber));
 				}
 				else {
@@ -94,17 +94,14 @@ public class LexicAnalyser {
 								continue;//executa o próximo loop
 							}
 							//pega a / como operador aritmétrico
-							System.out.println("lexeme: " + lexeme);
 							tokens.add(new Word(lexeme, Tag.ART, lineNumber));
 						}else{
 							//pega o lexema do operador aritmétrico
-							System.out.println("lexeme: " + lexeme);
 							tokens.add(new Word(lexeme, Tag.ART, lineNumber));
 						}
 						initialPointer = finalPointer;//atualiza o index de começo
 					}
 					else if(Character.toString(peek).matches("[;,{}.()[\\\\]]")){ //detecta simbolos de operadores delimitadores
-						System.out.println("lexeme: " + peek); //detectação dos simbolos de delimitadores
 						finalPointer+=1;
 						initialPointer = finalPointer;//atualiza o index de começo
 						tokens.add(new Word(Character.toString(peek), Tag.DEL, lineNumber));
@@ -113,7 +110,6 @@ public class LexicAnalyser {
 						//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
 						finalPointer = automateRelatOperator(finalPointer, line);
 						String lexeme = line.substring(initialPointer, finalPointer);
-						System.out.println("lexeme: " + lexeme);
 						tokens.add(new Word(lexeme, Tag.REL, lineNumber));
 						initialPointer = finalPointer;//atualiza o index de começo
 					}
@@ -121,14 +117,13 @@ public class LexicAnalyser {
 						//chama o metodo que executa o automato e retorna o index que determinou a parada do automato
 						int aux = automateLogicOperator(finalPointer, line);
 						if(aux == -1) {
-							System.out.println("Erro de operador logico ");
+							qntErrors++;
 							tokens.add(new Word("Erro de operador: " + Character.toString(peek), Tag.OpMF, lineNumber));
 							finalPointer++;
 							initialPointer = finalPointer;
 							continue;
 						}else finalPointer = aux;
 						String lexeme = line.substring(initialPointer, finalPointer);
-						System.out.println("lexeme: " + lexeme);
 						tokens.add(new Word(lexeme, Tag.LOG, lineNumber));
 						initialPointer = finalPointer; //atualiza o index de começo
 					}else if(Character.toString(peek).matches("[\"]")){
@@ -136,19 +131,24 @@ public class LexicAnalyser {
 						//finalPointer+1, pois se passa o primeiro caracter após as "
 						finalPointer = automateString(finalPointer+1, line);
 						if(finalPointer == -1) { //se detectou erro na string
+							qntErrors++;
 							String lexeme = line.substring(initialPointer, line.length());
-							System.out.println("Erro na string, não finalizou a cadeia com \" ");
 							tokens.add(new Word(lexeme, Tag.CMF, lineNumber));
 							break;
 						}else {//caso a cadeia de string esteja correta
 							String lexeme = line.substring(initialPointer, finalPointer);
-							System.out.println("lexeme: " + lexeme);
-							tokens.add(new Word(lexeme, Tag.CAD, lineNumber));
+							//veerifica se tem simbolos invalidos dentro da cadeia de string
+							if(lexeme.matches("^\"([\\d+.(\\d+)*]|\\w|[\\\\][\"]|[\\x20-\\x21]|[\\x23-\\x7E])*\""))
+								tokens.add(new Word(lexeme, Tag.CAD, lineNumber));
+							else {
+								qntErrors++;
+								tokens.add(new Word(lexeme, Tag.CMF, lineNumber));
+							}
 							initialPointer = finalPointer; //atualiza o index de começo
 						}
 					}
-					
 					else {
+						qntErrors++;
 						tokens.add(new Word("Caractere Inválido: " + Character.toString(peek), Tag.SIB, lineNumber));
 						finalPointer++;
 					}
@@ -157,6 +157,7 @@ public class LexicAnalyser {
 			lineNumber++;
 		}
 		if(isBlockComment) {
+			qntErrors++;
 			tokens.add(new Word("Erro de comentário", Tag.CoMF, lineNumber));
 		}
 		
@@ -298,6 +299,14 @@ public class LexicAnalyser {
 			}
 		}
 		return false;
+	}
+	
+	public int getQntErrors(){
+		return qntErrors;
+	}
+	
+	public void resetQntErrors() {
+		qntErrors = 0;
 	}
 	
 }

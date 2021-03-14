@@ -13,14 +13,15 @@ public class Main {
 	public static void main(String[] args) {
 		List<Token> tokens = new ArrayList<Token>();
 		//Pega os arquivos no diretório raíz
-		File[] files =  Files.getFiles("C:\\Users\\lsjsa\\OneDrive\\Documentos\\Java\\compilerII\\entradas");
-		//List<String> infoSymbol = Files.getContentFile(new File("D:\\gabri\\Documents\\Projetos\\Java\\compiler\\util"));
-		LexicAnalyser analyser = new LexicAnalyser(/*infoSymbol*/);
+		File[] files =  Files.getFiles("./entradas");
+		LexicAnalyser analyser = new LexicAnalyser();
 		for(File file : files) {
 			List<String> contentFile = Files.getContentFile(file);
 			tokens = analyser.analyseCode(contentFile);
+			if(analyser.getQntErrors() == 0) System.out.println("O arquivo " + file.getName() + " não possui erros léxicos");
 			int numberFile = Files.numberFile(file.getName());
-			Files.setContentFile(tokens, "C:\\Users\\lsjsa\\OneDrive\\Documentos\\Java\\compilerII\\saidas\\saida" + numberFile+ ".txt");
+			Files.setContentFile(tokens, "./saidas/saida" + numberFile+ ".txt");
+			analyser.resetQntErrors();
 		}
 	}
 
