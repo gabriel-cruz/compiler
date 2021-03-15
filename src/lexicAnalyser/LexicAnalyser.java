@@ -101,7 +101,7 @@ public class LexicAnalyser {
 						}
 						initialPointer = finalPointer;//atualiza o index de começo
 					}
-					else if(Character.toString(peek).matches("[;,{}.()[\\\\]]")){ //detecta simbolos de operadores delimitadores
+					else if(Character.toString(peek).matches("[;,{}.()[\\[\\]]]")){ //detecta simbolos de operadores delimitadores
 						finalPointer+=1;
 						initialPointer = finalPointer;//atualiza o index de começo
 						tokens.add(new Word(Character.toString(peek), Tag.DEL, lineNumber));
@@ -151,6 +151,7 @@ public class LexicAnalyser {
 						qntErrors++;
 						tokens.add(new Word("Caractere Inválido: " + Character.toString(peek), Tag.SIB, lineNumber));
 						finalPointer++;
+						initialPointer = finalPointer;
 					}
 				}
 			}

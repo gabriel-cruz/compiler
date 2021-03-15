@@ -1,0 +1,1076 @@
+/* eslint-disable prefer-destructuring,no-param-reassign,object-curly-newline */
+import sequelize from 'sequelize'
+import moment from 'moment'
+import { format, addMinutes } from 'date-fns'
+import createDebug from 'debug'
+import { EventEmitter } from 'events'
+import { isEmpty, pick, size, capitalize, omit } from 'lodash'
+import createEvaluator, { Condition } from '../../core/utils/createEvaluator'
+import { decryptTextForAccount } from '../../core/services/accountCryptor'
+import reportError from '../../core/services/reportError'
+import interpolate from '../../core/utils/interpolate'
+import messageResource from '../../core/resources/messageResource'
+import ticketResource from '../../core/resources/ticketResource'
+import contactResource from '../../core/resources/contactResource'
+import tagResource from '../../core/resources/tagResource'
+import botsSessionsResource from '../../core/resources/botsSessionsResource'
+import fileResource from '../../core/resources/fileResource'
+import questionResource from '../../core/resources/questionResource'
+import answersResource from '../../core/resources/answersResource'
+import customFieldValuesResource from '../../core/resources/customFieldValuesResource'
+import { ContactInstance } from '../../core/dbSequelize/models/Contact'
+import { MessageInstance } from '../../core/dbSequelize/models/Message'
+import { TicketInstance } from '../../core/dbSequelize/models/Ticket'
+import { BotInstance } from '../../core/dbSequelize/models/Bot'
+import isOpenByRulesAndDate from '../../core/utils/isOpenByRulesAndDate'
+import queuedAsyncMap from '../../core/utils/array/queuedAsyncMap'
+import getTimezoneMinutesOffset from '../../core/utils/getTimezoneMinutesOffset'
+import botResource from '../../core/resources/botResource'
+import messageTransformer from '../../core/transformers/messageTransformer'
+import {
+  SendMessageActionData,
+  SetContextActionData,
+  SetTagsActionData,
+  TransferTicketActionData,
+  CloseTicketActionData,
+  SetVarActionData,
+  SendQuestionActionData,
+  SendWebhookCommandActionData,
+  CustomFieldsAction,
+} from './types'
+
+type ActionData =
+  | SendMessageActionData
+  | SetContextActionData
+  | SetTagsActionData
+  | TransferTicketActionData
+  | CloseTicketActionData
+  | SetVarActionData
+  | SendQuestionActionData
+  | SendWebhookCommandActionData
+  | CustomFieldsAction
+  | undefined
+
+export type Action<TData extends ActionData = ActionData> = {
+  value: keyof typeof actionsMap
+  data?: TData
+}
+
+export type Event =
+  | 'MESSAGE_RECEIVED'
+  | 'WIDGET_MESSAGE_RECEIVED'
+  | 'USER_MESSAGE_SENT'
+  | 'MANUAL_TICKET_OPENED'
+  | 'TICKET_OPENED'
+  | 'TICKET_CLOSED'
+  | 'TICKET_BEFORE_CLOSE'
+  | 'TICKET_INACTIVE'
+  | 'ENTER_CONTEXT'
+  | 'LEAVE_CONTEXT'
+  | 'CONTACT_CREATED'
+  | 'CONTACT_RECONNECTED'
+  | 'API_SIGNAL'
+
+export type Context = '@FALLBACK' | '@INIT' | '@EVERY' | string
+
+export type SessionStore = {
+  context: Context // current session name
+  variables?: {
+    [key: string]: string
+  }
+}
+
+type HandleActionsPayload = {
+  event: Event
+  bot: BotInstance
+  contact: ContactInstance
+  message?: MessageInstance
+  ticket?: TicketInstance
+  context: string
+  sessionStore: SessionStore
+  actions: Action<any>[]
+}
+
+type ActionPayload<TActionData extends ActionData = ActionData> = {
+  event: Event
+  bot: BotInstance
+  contact: ContactInstance
+  message?: MessageInstance
+  ticket?: TicketInstance
+  action: Action<TActionData>
+  context: Context
+  sessionStore: SessionStore
+}
+
+type HandleTriggerPayload = {
+  event: Event
+  bot: BotInstance
+  contact: ContactInstance
+  message?: MessageInstance
+  ticket?: TicketInstance
+  triggerData?: {
+    [key: string]: any
+  }
+}
+
+type ConditionPassesPayload = {
+  bot: BotInstance
+  contact: ContactInstance
+  message?: MessageInstance
+  ticket?: TicketInstance
+  context: Context
+  sessionStore: SessionStore
+  conditions: Condition[]
+  triggerData?: {
+    [key: string]: any
+  }
+}
+
+type InterpolateWithContextPayload = {
+  message?: MessageInstance
+  contact: ContactInstance
+  ticket?: TicketInstance
+  sessionStore: SessionStore
+  triggerData?: {
+    [key: string]: any
+  }
+}
+
+const log = createDebug('app:bot')
+
+const emitter = new EventEmitter()
+
+export const fetchMessageWithRelations = (id: string) =>
+  messageResource.findOne({
+    where: { id },
+    include: [
+      {
+        model: 'contact',
+        include: [
+          'account',
+          {
+            model: 'currentTicket',
+            include: [
+              {
+                model: 'currentTicketTransfer',
+                include: ['firstMessage'],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        model: 'service',
+        include: ['bot'],
+      },
+      'account',
+      'file',
+    ],
+  })
+
+export const fetchTicketWithRelations = (id: string) =>
+  ticketResource.findOne({
+    where: { id },
+    include: [
+      {
+        model: 'contact',
+        include: [
+          'account',
+          {
+            model: 'currentTicket',
+            include: [
+              {
+                model: 'currentTicketTransfer',
+                include: ['firstMessage'],
+              },
+            ],
+          },
+          {
+            model: 'service',
+            include: ['bot'],
+          },
+        ],
+      },
+      {
+        model: 'ticketTransfers',
+        group: ['id'],
+        order: [[sequelize.fn('max', sequelize.col('createdAt')), 'DESC']],
+        limit: 1,
+      },
+    ],
+  })
+
+const greeting = (date: Date): string => {
+  let hours = Number(format(date, 'H'))
+  if (hours >= 6 && hours < 12) return 'bom dia'
+  if (hours >= 12 && hours < 18) return 'boa tarde'
+  return 'boa noite'
+}
+
+export const interpolateWithContext = (
+  str: string,
+  payload: InterpolateWithContextPayload,
+) => {
+  const { message, contact, ticket, sessionStore, triggerData = {} } = payload
+
+  const account = contact.account || message.account
+  const messageText = (message && message.text) || ''
+  const contactName = (contact && contact.name) || ''
+  const contactNumber = (contact && contact.data.number) || null
+  const protocolNumber = (ticket && ticket.protocol) || null
+  const isFirstMessage = Boolean(
+    message &&
+      message.data &&
+      message.data.isFirst &&
+      message.data.isNew &&
+      !message.isFromMe,
+  )
+  const { variables = {} } = sessionStore || {}
+
+  const interpolationSessionVariables = Object.entries(variables).reduce(
+    (obj, [key, value]) => {
+      obj[`variable.${key}`] = value
+      return obj
+    },
+    {},
+  )
+
+  const accountTimezoneOffset = getTimezoneMinutesOffset(
+    account.settings.timezone,
+  )
+  const zonedDate = addMinutes(new Date(), accountTimezoneOffset)
+
+  const interpolations = {
+    ...interpolationSessionVariables,
+    api_signal_flag: triggerData.flag,
+    message_text:
+      message && messageText ? decryptTextForAccount(account, messageText) : '',
+    protocol_number: protocolNumber,
+    contact_name: contactName,
+    contact_number: contactNumber,
+    is_first_message: isFirstMessage,
+    is_company_open: isOpenByRulesAndDate(
+      account.settings.workPlan,
+      new Date(),
+      accountTimezoneOffset,
+    ),
+    is_message_from_me: message && message.isFromMe,
+    is_first_ticket_message:
+      !!ticket && ticket.lastMessageId === ticket.firstMessageId,
+    ticket_department: ticket && ticket.departmentId,
+    greeting: greeting(zonedDate),
+    capitalized_greeting: capitalize(greeting(zonedDate)),
+  }
+
+  return interpolate(str, interpolations)
+}
+
+export const getSession = async ({
+  bot,
+  contact,
+}: {
+  bot: BotInstance
+  contact: ContactInstance
+}) => {
+  const sessions = await bot.getSessions({
+    where: {
+      contactId: contact.id,
+    },
+  })
+
+  return Array.isArray(sessions) ? sessions[0] : sessions
+}
+
+export const setSession = async (
+  { bot, contact }: { bot: BotInstance; contact: ContactInstance },
+  dataOrFn,
+) => {
+  const contactSession = await getSession({ bot, contact })
+  const data =
+    typeof dataOrFn === 'function' ? dataOrFn(contactSession) : dataOrFn
+
+  if (contactSession) {
+    return botsSessionsResource.update(contactSession, {
+      store: {
+        ...data,
+      },
+    })
+  }
+
+  return botsSessionsResource.create({
+    botId: bot.id,
+    contactId: contact.id,
+    accountId: contact.accountId,
+    store: {
+      ...data,
+    },
+  })
+}
+
+export const sendMessageAction = async (
+  payload: ActionPayload<SendMessageActionData>,
+) => {
+  const { contact, action, bot } = payload
+  let file = null
+
+  if (!action.data) return
+  if (!action.data.text && !action.data.file) return
+
+  if (action.data.file) {
+    const fileInstance = await fileResource.findById(action.data.file)
+
+    if (!fileInstance) {
+      throw new Error(`File with id "${action.data.file}" not found.`)
+    }
+
+    file = {
+      ...pick(fileInstance, ['mimetype', 'name', 'extension', 'isEncrypted']),
+      base64: await fileResource.getBase64(fileInstance),
+    }
+  }
+
+  return messageResource.send({
+    contact,
+    text: interpolateWithContext(action.data.text || '', payload),
+    file,
+    origin: 'bot',
+    botId: bot.id,
+  })
+}
+
+export const setVarAction = async (
+  payload: ActionPayload<SetVarActionData>,
+) => {
+  const { bot, contact, action } = payload
+  const { key, value } = action.data
+
+  const interpolatedValue = interpolateWithContext(value, payload)
+
+  await setSession({ bot, contact }, (state) => ({
+    variables: {
+      ...state.variables,
+      [key]: interpolatedValue,
+    },
+  }))
+}
+
+export const setContextAction = async (
+  payload: ActionPayload<SetContextActionData>,
+) => {
+  const { bot, contact, action, context: currentContext } = payload
+  const { context: newContext = '@INIT' } = action.data
+
+  const newSession = await setSession(
+    { bot, contact },
+    {
+      context: newContext,
+    },
+  )
+
+  emitter.emit('LEAVE_CONTEXT', {
+    bot,
+    contact,
+    context: currentContext,
+  })
+  emitter.emit('ENTER_CONTEXT', { bot, contact, context: newContext })
+
+  return newSession
+}
+
+export const resetContextAction = async (payload: ActionPayload<undefined>) => {
+  return setContextAction({
+    ...payload,
+    action: {
+      value: null,
+      data: { context: '@INIT' },
+    },
+  })
+}
+
+export const closeTicketAction = async (
+  payload: ActionPayload<CloseTicketActionData>,
+) => {
+  const { contact, action } = payload
+  const { ticketTopics, comments } = action.data
+
+  return contactResource.closeTicket({
+    contact,
+    ticketTopicIds: ticketTopics,
+    comments,
+  })
+}
+
+export const transferTicketAction = async (
+  payload: ActionPayload<TransferTicketActionData>,
+) => {
+  const { contact, action } = payload
+  const { user, department } = action.data
+
+  const departmentId = (department || {}).id || department
+
+  let userId = (user || {}).id || user
+
+  // Transfere direto para o usuário padrão se existir no contato
+  if (
+    contact.defaultDepartmentId &&
+    contact.defaultUserId &&
+    departmentId === contact.defaultDepartmentId
+  ) {
+    userId = contact.defaultUserId
+  }
+
+  return contactResource.transferTicket({
+    contact,
+    userId,
+    departmentId,
+  })
+}
+
+const sendQuestion = async (payload: ActionPayload<SendQuestionActionData>) => {
+  const { contact, bot, action, ticket } = payload
+
+  const questionId = action.data.question
+
+  const question = await questionResource.findById(questionId)
+
+  const expiresAt = moment(new Date()).add(question.expiresAt, 'm')
+
+  await contactResource.updateById(
+    contact.id,
+    {
+      data: {
+        ...contact.data,
+        evaluation: {
+          ticketId: ticket.id,
+          questionId: question.id,
+          expiresAt: expiresAt,
+        },
+      },
+    },
+    { dontEmit: true },
+  )
+
+  return messageResource.send({
+    contact,
+    text: question.questionName,
+    origin: 'bot',
+    botId: bot.id,
+    isEvaluation: true,
+  })
+}
+
+const writeCustomFieldAction = async (
+  payload: ActionPayload<CustomFieldsAction>,
+) => {
+  const { contact, message, action } = payload
+
+  if (!message) return
+  const account = contact.account || message.account
+  const text = decryptTextForAccount(account, message.text)
+
+  return customFieldValuesResource.save({
+    customFieldId: action.data.customField,
+    relatedId: contact.id,
+    relatedType: 'contact',
+    value: text,
+  })
+}
+
+const sendWebhookCommand = async (
+  payload: ActionPayload<SendWebhookCommandActionData>,
+) => {
+  const { contact, message, bot, action } = payload
+  delete message.contact
+  const data = {
+    id: bot.id,
+    contactId: contact.id,
+    accountId: bot.accountId,
+    command: action.data.command,
+    message: await messageTransformer(message, {
+      account: contact.account,
+      byPassPermissions: true,
+    }),
+  }
+  botResource.emitCommand(data)
+}
+
+export const addTagAction = async (
+  payload: ActionPayload<SetTagsActionData>,
+) => {
+  const { action, contact, bot } = payload
+  const { tags } = action.data
+
+  const loadedTags = await tagResource.findMany({
+    where: {
+      id: { $in: tags },
+      accountId: bot.accountId,
+    },
+  })
+
+  const loadedContact = await contactResource.findById(contact.id)
+  return contactResource.addTags(loadedContact, loadedTags)
+}
+
+export const removeTagAction = async (
+  payload: ActionPayload<SetTagsActionData>,
+) => {
+  const { bot, contact, action } = payload
+  const { tags } = action.data
+
+  const loadedTags = await tagResource.findMany({
+    where: {
+      id: { $in: tags },
+      accountId: bot.accountId,
+    },
+  })
+
+  const loadedContact = await contactResource.findById(contact.id)
+  return contactResource.removeTags(loadedContact, loadedTags)
+}
+
+// Causa loop se o contexto 1 executa o 2 e o 2 executa o 1
+// export const executeContext = async ({
+//   event,
+//   context,
+//   contact,
+//   message,
+//   bot,
+//   action,
+//   ticket,
+// }) => {
+//   if (!event) return
+//
+//   console.log('event', event)
+//
+//   return handleTrigger({
+//     event,
+//     bot,
+//     contact,
+//     message,
+//     ticket,
+//     context: action.data.context,
+//   })
+// }
+
+export const unsubscribeFromCampaign = async (
+  payload: ActionPayload<undefined>,
+) => {
+  const { contact } = payload
+  return contactResource.update(contact, { unsubscribed: true })
+}
+
+const getTriggerRules = ({
+  bot,
+  context = '@INIT',
+  event,
+}: {
+  contact: ContactInstance
+  bot: BotInstance
+  context: Context
+  event: Event
+}) => [
+  ...((!isEmpty(bot.contexts[context]) &&
+    bot.contexts[context].triggers[event]) ||
+    []),
+]
+
+export const getMatchingRules = ({
+  bot,
+  context,
+  contact,
+  event,
+}: {
+  contact: ContactInstance
+  bot: BotInstance
+  context: Context
+  event: Event
+}) => [...getTriggerRules({ bot, context, contact, event })]
+
+export const conditionsPasses = (payload: ConditionPassesPayload) => {
+  const { conditions } = payload
+
+  const evaluate = createEvaluator({
+    parseLeft: (key) => interpolateWithContext(key, payload),
+  })
+  return evaluate(conditions)
+}
+
+const actionsMap: {
+  [actionName: string]: (payload: ActionPayload) => Promise<any>
+} = {
+  SEND_MESSAGE: sendMessageAction,
+  RESET_CONTEXT: resetContextAction,
+  SET_CONTEXT: setContextAction,
+  ADD_TAG: addTagAction,
+  REMOVE_TAG: removeTagAction,
+  TRANSFER_TICKET: transferTicketAction,
+  CLOSE_TICKET: closeTicketAction,
+  UNSUBSCRIBE_FROM_CAMPAIGN: unsubscribeFromCampaign,
+  SEND_QUESTION: sendQuestion,
+  WRITE_CUSTOM_FIELD: writeCustomFieldAction,
+  SEND_WEBHOOK_COMMAND: sendWebhookCommand,
+  SET_VAR: setVarAction,
+  // SET_TIMER: setTimerAction,
+  // CLEAR_TIMER: clearTimerAction,
+  // HTTP_REQUEST: httpRequestAction,
+  // EXECUTE_CONTEXT: executeContext,
+}
+
+export const handleAction = async (payload: ActionPayload) => {
+  const { bot, action, contact } = payload
+  log(
+    `Taking action "${action.value}" for contact #${contact.id} (${contact.name}) on bot #${bot.id} (${bot.name}).`,
+  )
+
+  const actionFn = actionsMap[action.value]
+
+  if (!actionFn) return
+  // @ts-ignore
+  return actionFn(payload)
+}
+
+export const handleActions = async (payload: HandleActionsPayload) => {
+  const { actions } = payload
+
+  return queuedAsyncMap(
+    actions,
+    (action) =>
+      handleAction({
+        ...payload,
+        action,
+      }),
+    1,
+  )
+}
+
+export const handleTrigger = async (payload: HandleTriggerPayload) => {
+  const { event, bot, contact } = payload
+  try {
+    log(
+      `Handling trigger "${event}" for contact #${contact.id} (${contact.name}) on bot #${bot.id} (${bot.name}).`,
+    )
+
+    const session = (await getSession({ bot, contact })) || {}
+    const sessionStore = session.store
+
+    const context = (sessionStore || {}).context
+
+    const rules = await getMatchingRules({
+      bot,
+      context,
+      contact,
+      event,
+    })
+
+    let rulesThatPasses = rules.filter((rule) =>
+      conditionsPasses({
+        ...payload,
+        conditions: rule.conditions,
+        context,
+        sessionStore,
+      }),
+    )
+
+    // Fallback context if no rules were matched
+    if (rules.length !== 0 && rulesThatPasses.length === 0) {
+      rulesThatPasses = await getTriggerRules({
+        ...payload,
+        context: '@FALLBACK',
+      })
+    }
+
+    // Inject every context rules
+    const everyTriggerRules = await getTriggerRules({
+      ...payload,
+      context: '@EVERY',
+    })
+
+    const everyRulesThatPasses = everyTriggerRules.filter((rule) =>
+      conditionsPasses({
+        ...payload,
+        conditions: rule.conditions,
+        context,
+        sessionStore,
+      }),
+    )
+
+    rulesThatPasses.push(...everyRulesThatPasses)
+
+    return await queuedAsyncMap(
+      rulesThatPasses,
+      (rule) =>
+        handleActions({
+          ...payload,
+          actions: rule.actions,
+          context,
+          sessionStore,
+        }),
+      1,
+    )
+  } catch (e) {
+    reportError(e)
+    return false
+  }
+}
+
+export const handleMessageCreated = async (
+  message: MessageInstance | MessageInstance[],
+) => {
+  if (Array.isArray(message)) {
+    return Promise.all(message.map((m) => handleMessageCreated(m)))
+  }
+  const { isFromSync } = message.data
+  const { isNew, isFromFirstSync } = message.data
+
+  // message type comes like null if its a common message, but it will come as
+  // 'ticket' if is a ticket opened / closed message, just ignore it
+  if (
+    !isNew ||
+    isFromSync ||
+    isFromFirstSync ||
+    message.isFromMe ||
+    ['bot'].includes(message.origin)
+  )
+    return
+
+  message = await fetchMessageWithRelations(message.id)
+
+  if (!message.service.bot) return
+
+  const bot = message.service.bot
+  const { contact, account } = message
+  const ticket = contact.currentTicket
+
+  if (
+    contact.data.evaluation &&
+    moment(new Date()).isBefore(contact.data.evaluation.expiresAt) &&
+    message.type !== 'ticket' &&
+    !message.isFromBot
+  ) {
+    await answersResource.create({
+      questionId: contact.data.evaluation.questionId,
+      ticketId: contact.data.evaluation.ticketId,
+      text: decryptTextForAccount(account, message.text),
+    })
+
+    await contactResource.updateById(contact.id, {
+      data: {
+        ...omit(contact.data, ['evaluation']),
+      },
+    })
+
+    return
+  }
+
+  if (
+    contact.data.evaluation &&
+    moment(new Date()).isAfter(contact.data.evaluation.expiresAt)
+  ) {
+    await answersResource.create({
+      questionId: contact.data.evaluation.questionId,
+      ticketId: contact.data.evaluation.ticketId,
+      text: null,
+    })
+
+    await contactResource.updateById(contact.id, {
+      data: {
+        ...omit(contact.data, ['evaluation']),
+      },
+    })
+  }
+
+  return handleTrigger({
+    event: 'MESSAGE_RECEIVED',
+    bot,
+    contact,
+    message,
+    ticket,
+  })
+}
+
+export const handleWidgetMessageReceived = async (
+  data: MessageInstance | MessageInstance[],
+) => {
+  if (Array.isArray(data)) {
+    return Promise.all(data.map((m) => handleWidgetMessageReceived(m)))
+  }
+
+  const { contactId, text } = data
+
+  const contact = await contactResource.findById(contactId, {
+    include: [
+      {
+        model: 'service',
+        include: ['bot'],
+      },
+      'currentTicket',
+      'account',
+    ],
+  })
+
+  const bot = contact.service.bot
+
+  if (!bot) return
+
+  const ticket = contact.currentTicket
+  const message = {
+    text,
+    contact,
+    service: contact.service,
+    account: contact.account,
+    data: {},
+  }
+
+  return handleTrigger({
+    event: 'WIDGET_MESSAGE_RECEIVED',
+    bot,
+    contact,
+    // @ts-ignore
+    message,
+    ticket,
+  })
+}
+
+export const handleUserMessageSent = async (
+  data: MessageInstance | MessageInstance[],
+) => {
+  if (Array.isArray(data)) {
+    return Promise.all(data.map((m) => handleUserMessageSent(m)))
+  }
+
+  const { contactId, text } = data
+
+  const contact = await contactResource.findById(contactId, {
+    include: [
+      {
+        model: 'service',
+        include: ['bot'],
+      },
+      'currentTicket',
+      'account',
+    ],
+  })
+
+  const bot = contact.service.bot
+
+  if (!bot) return
+
+  const ticket = contact.currentTicket
+  const message = {
+    text,
+    contact,
+    service: contact.service,
+    account: contact.account,
+    data: {},
+  }
+
+  return handleTrigger({
+    event: 'USER_MESSAGE_SENT',
+    bot,
+    contact,
+    // @ts-ignore
+    message,
+    ticket,
+  })
+}
+
+export const handleTicketOpened = async (
+  ticket: TicketInstance | TicketInstance[],
+) => {
+  if (Array.isArray(ticket)) {
+    return Promise.all(ticket.map((t) => handleTicketOpened(t)))
+  }
+
+  ticket = await fetchTicketWithRelations(ticket.id)
+  const contact = ticket.contact
+  const bot = contact.service.bot
+  const lastTicketTransfer = (ticket.ticketTransfers || [])[0]
+
+  if (!bot || size(bot.contexts) === 0) return
+
+  if (lastTicketTransfer && lastTicketTransfer.byUserId) {
+    return handleTrigger({
+      event: 'MANUAL_TICKET_OPENED',
+      bot,
+      contact,
+      ticket,
+    })
+  }
+
+  return handleTrigger({ event: 'TICKET_OPENED', bot, contact, ticket })
+}
+
+export const handleTicketClosed = async (
+  ticket: TicketInstance | TicketInstance[],
+) => {
+  if (Array.isArray(ticket)) {
+    return Promise.all(ticket.map((t) => handleTicketClosed(t)))
+  }
+
+  ticket = await fetchTicketWithRelations(ticket.id)
+  const contact = ticket.contact
+  const bot = contact.service.bot
+
+  if (!bot || size(bot.contexts) === 0) return
+
+  return handleTrigger({ event: 'TICKET_CLOSED', bot, contact, ticket })
+}
+
+export const handleTicketBeforeClose = async (
+  ticket: TicketInstance | TicketInstance[],
+) => {
+  if (Array.isArray(ticket)) {
+    return Promise.all(ticket.map((t) => handleTicketBeforeClose(t)))
+  }
+
+  ticket = await fetchTicketWithRelations(ticket.id)
+  const contact = ticket.contact
+  const bot = contact.service.bot
+
+  if (!bot || size(bot.contexts) === 0) return
+
+  return handleTrigger({ event: 'TICKET_BEFORE_CLOSE', bot, contact, ticket })
+}
+
+export const handleTicketInactive = async (
+  ticket: TicketInstance | TicketInstance[],
+) => {
+  if (Array.isArray(ticket)) {
+    return Promise.all(ticket.map((t) => handleTicketInactive(t)))
+  }
+
+  const contact = ticket.contact
+  const bot = contact.service.bot
+  const message = contact.lastMessage
+
+  if (!bot || size(bot.contexts) === 0) return
+
+  return handleTrigger({
+    event: 'TICKET_INACTIVE',
+    bot,
+    contact,
+    ticket,
+    message,
+  })
+}
+
+export const handleContactCreated = async (
+  contact: ContactInstance | ContactInstance[],
+  event: 'CONTACT_CREATED' | 'CONTACT_RECONNECTED',
+) => {
+  if (Array.isArray(contact)) {
+    return Promise.all(contact.map((c) => handleContactCreated(c, event)))
+  }
+
+  const contactInclude = await contactResource.findById(contact.id, {
+    include: [
+      {
+        model: 'service',
+        include: ['bot'],
+      },
+      'account',
+      'currentTicket',
+    ],
+  })
+
+  const bot = contactInclude.service.bot
+
+  if (!bot || size(bot.contexts) === 0) return
+
+  return handleTrigger({
+    event,
+    bot,
+    contact: contactInclude,
+    ticket: null,
+    message: null,
+  })
+}
+
+export const handleApiSignal = async ({
+  botId,
+  contactId,
+  flag,
+}: {
+  botId: string
+  contactId: string
+  flag: string
+}) => {
+  const [bot, contact] = await Promise.all([
+    botResource.findById(botId),
+    contactResource.findById(contactId, {
+      include: ['account', 'currentTicket'],
+    }),
+  ])
+
+  if (!bot) throw new Error(`Bot not found #${botId}.`)
+  if (!contact) throw new Error(`Contact not found #${contactId}.`)
+
+  return handleTrigger({
+    event: 'API_SIGNAL',
+    bot,
+    contact,
+    triggerData: {
+      flag,
+    },
+  })
+}
+
+export const start = () => {
+  messageResource.onCreated((message) =>
+    handleMessageCreated(message).catch(reportError),
+  )
+
+  messageResource.onWidgetMessageReceived((data) =>
+    handleWidgetMessageReceived(data).catch(reportError),
+  )
+
+  messageResource.onUserMessageSent((data) =>
+    handleUserMessageSent(data).catch(reportError),
+  )
+
+  ticketResource.onOpened((ticket) =>
+    handleTicketOpened(ticket).catch(reportError),
+  )
+
+  ticketResource.onClosed((ticket) =>
+    handleTicketClosed(ticket).catch(reportError),
+  )
+
+  ticketResource.onBeforeClose((ticket) =>
+    handleTicketBeforeClose(ticket).catch(reportError),
+  )
+
+  ticketResource.onInactive((ticket) =>
+    handleTicketInactive(ticket).catch(reportError),
+  )
+
+  contactResource.onCreated((contact) =>
+    handleContactCreated(contact, 'CONTACT_CREATED').catch(reportError),
+  )
+
+  contactResource.onInitChatWebchat((contact) =>
+    handleContactCreated(contact, 'CONTACT_RECONNECTED').catch(reportError),
+  )
+
+  botResource.onApiSignal((data) => handleApiSignal(data).catch(reportError))
+
+  emitter.on('ENTER_CONTEXT', ({ bot, contact, context }) =>
+    handleTrigger({
+      bot,
+      contact,
+      event: 'ENTER_CONTEXT',
+      triggerData: { context },
+    }),
+  )
+
+  emitter.on('LEAVE_CONTEXT', ({ bot, contact, context }) =>
+    handleTrigger({
+      bot,
+      contact,
+      event: 'LEAVE_CONTEXT',
+      triggerData: { context },
+    }),
+  )
+}
+
+export const stop = () => {}

@@ -10,7 +10,7 @@ public class Number extends Token{
 	
 	
 	public String toString() { 
-		return "<" + super.line + "," + super.getSymbol() + "," + value + ">\n"; 
+		return "<" + super.line + " " + super.getSymbol() + " " + value + ">\n"; 
 	}
 }
 

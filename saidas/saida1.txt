@@ -1,8 +1,8 @@
-<0,IDE,teste_u>
-<0,ART,++>
-<0,LOG,!>
-<0,REL,>=>
-<0,ART,->
-<0,LOG,||>
-<0,NRO,96910>
-<1,CMF,"testeç">
+<0 IDE teste_u>
+<0 ART ++>
+<0 LOG !>
+<0 REL >=>
+<0 ART ->
+<0 LOG ||>
+<0 NRO 96910>
+<1 CMF "testeç">

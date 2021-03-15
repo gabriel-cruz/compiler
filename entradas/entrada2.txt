@@ -1,4 +1,4 @@
 ult int test
 @ |teste
-var 5 + 9 = 10
+var [0]
 "teste

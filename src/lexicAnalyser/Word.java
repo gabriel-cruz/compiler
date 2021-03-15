@@ -9,7 +9,7 @@ public class Word extends Token{
 	}
 	
 	public String toString() {
-		return "<" + super.line + "," + super.getSymbol() + "," + lexeme + ">\n"; 
+		return "<" + super.line + " " + super.getSymbol() + " " + lexeme + ">\n"; 
 	}
 	
 	/*public final Word and = new Word ("&&", Tag.LOG),
