@@ -1,0 +1,30 @@
+<2 PRE start>
+<2 DEL (>
+<2 DEL )>
+<3 DEL {>
+<4 PRE var>
+<4 DEL {>
+<5 PRE int>
+<5 IDE a>
+<5 DEL ,>
+<5 IDE x>
+<5 DEL ;>
+<7 PRE real>
+<7 IDE b>
+<7 DEL ;>
+<10 IDE b>
+<10 REL =>
+<10 NRO 1>
+<10 DEL .>
+<10 NRO 2>
+<10 DEL ;>
+<11 IDE a>
+<11 REL =>
+<12 IDE b>
+<12 REL =>
+<12 NRO 5>
+<12 SIB Caractere Inválido: $>
+<12 DEL ;>
+<12 ART *>
+<12 ART />
+<17 CoMF Erro de comentário>

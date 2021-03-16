@@ -45,6 +45,9 @@ public class LexicAnalyser {
 							//se chegar no final da linha para o laço de repetição
 							if(finalPointer == line.length()) break;
 							else initialPointer = finalPointer;
+						}else{
+							finalPointer++;
+							continue;
 						}
 					}else finalPointer++; //incrementa o index
 					continue;
@@ -161,7 +164,6 @@ public class LexicAnalyser {
 			qntErrors++;
 			tokens.add(new Word("Erro de comentário", Tag.CoMF, lineNumber));
 		}
-		
 		return tokens;
 	}
 	

@@ -1,0 +1,17 @@
+ // Testes de comentario
+
+start ()
+{
+	var {
+		int a, x;
+		// 	real //s	;	
+		real b;
+	/*
+	s = -1.3;	**/
+	b = /* numero real */ 1.2;
+	a = // /*-1;
+	b = 5$;	*/
+
+	/* 
+
+}

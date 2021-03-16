@@ -1,0 +1,27 @@
+// Programa sem erros
+
+start ()
+{
+	var 
+	{
+		int x;
+		int y;
+		int w;
+	}
+	read(x); // Leitura de x
+	read(y); // Leitura de y
+	while(x > y)
+	{
+		w = x + y;
+		print(w);
+		x--;
+		y++;
+	}
+}		
+
+
+function int imprime (int w)
+{
+	print (w);
+	return w;
+}

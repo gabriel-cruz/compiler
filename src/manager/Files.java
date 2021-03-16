@@ -20,7 +20,7 @@ public class Files {
 	 */
 	static public File[] getFiles(String path) {
 		File parentPath = new File(path);
-		File[] files = parentPath.listFiles(file -> file.getName().matches("entrada\\d.txt$"));
+		File[] files = parentPath.listFiles(file -> file.getName().matches("entrada\\d*.txt$"));
 		return files;
 	}
 	

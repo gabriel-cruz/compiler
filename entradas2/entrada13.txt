@@ -1,0 +1,17 @@
+	// Programa com varios erros
+	//tabulacao no inicio de cada linha
+
+	start()
+	{
+		inteiro a?;
+
+		a = %; 
+		a = 2.&;
+		a = 7.x;
+					
+		se (?) entao
+		{
+			x : a;
+		}
+		/* Testando comentario nao finalizado;
+	}

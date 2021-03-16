@@ -1,0 +1,15 @@
+// Caracteres invalidos
+
+start()
+{
+	var
+	{
+		int $;
+		int x;
+	}
+	
+	if (x >> 2 &&& a ++% | x ?) then
+	{
+		a := _ \ ^;
+	
+}

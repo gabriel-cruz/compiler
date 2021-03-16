@@ -1,0 +1,11 @@
+//Teste de cadeia constante
+start ()
+{
+		var
+		{
+			string nome = "cl'audio ";
+			string teste = "aspa\"s";
+			string sobrenome = " Eduardo " Goes ";
+		}
+}
+			
