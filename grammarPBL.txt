@@ -1,0 +1,164 @@
+	Number		DecLiteral
+	Number		OctLiteral
+	Number		HexLiteral
+	Number		FloatLiteral
+	PrefixGlobalLocal		global.
+	PrefixGlobalLocal		local.
+	Program		GlobalDecl Decls Start
+	GlobalDecl		ConstDecl
+	GlobalDecl		VarDecl
+	GlobalDecl		ConstDecl VarDecl
+	GlobalDecl		VarDecl ConstDecl
+	GlobalDecl		 
+	Start		start ( ) { BodyProcedure } Decls
+	Decls		Decl Decls
+	Decls		 
+	Decl		FunctionDeclaration
+	Decl		ProcDecl
+	Decl		StructDecl
+	Decl		TypedefDecl
+	FormalParameterList		Exp
+	FormalParameterList		Exp , FormalParameterList
+	FormalParameterList		 
+	FormalParameterListRead		Identifier
+	FormalParameterListRead		FormalParameterListRead , Identifier
+	FunctionDeclaration		function Type Identifier ( Params ) { Body }
+	ProcDecl		procedure Identifier ( Params ) { BodyProcedure }
+	ProcDecl		Identifier ( FormalParameterList ) { BodyProcedure }
+	Params		Param , Params
+	Params		Param
+	Params		 
+	Param		const Type Identifier
+	Param		Type Identifier
+	FunctionCall		Identifier ( FormalParameterList )
+	TypedefDecl		typedef Base Identifier ;
+	Base		Type
+	Base		struct Extends { VariablesList }
+	Base		StructDecl
+	StructDecl		struct Identifier Extends { VariablesList }
+	Extends		extends Identifier
+	Extends		 
+	ConstDecl		const { ConstList }
+	ConstList		Type Const ConstList
+	ConstList		 
+	Const		Identifier = Value DelimiterConst
+	DelimiterConst		, Const
+	DelimiterConst		;
+	Type		int
+	Type		real
+	Type		boolean
+	Type		string
+	Type		struct Identifier
+	Type		Identifier
+	Value		Number
+	Value		BooleanLiteral
+	Value		StringLiteral
+	VarDecl		var { VariablesList }
+	VariablesList		Type Variable VariablesList
+	VariablesList		 
+	Variable		Identifier Aux
+	Aux		= Value DelimiterVar
+	Aux		DelimiterVar
+	Aux		Vector Assignment_vector DelimiterVar
+	Aux		Matrix Assignment_matrix DelimiterVar
+	DelimiterVar		, Variable
+	DelimiterVar		;
+	Index		DecLiteral
+	Index		OctLiteral
+	Index		Identifier
+	Vector		[ Index ]
+	Matrix		[ Index ] Vector
+	Assignment_vector		Assignment_vector_aux
+	Assignment_vector		Assignment_vector_aux
+	Assignment_vector		 
+	Assignment_vector_aux		= Value
+	Assignment_vector_aux		= { Value_assigned_vector }
+	Value_assigned_vector		Value , Value_assigned_vector
+	Value_assigned_vector		Value
+	Assignment_matrix		Assignment_matrix_aux
+	Assignment_matrix		assignment_matrix_aux
+	Assignment_matrix		 
+	Assignment_matrix_aux		Assignment_vector_aux
+	assignment_matrix_aux		= { { Value_assigned_matrix } Dimensao_matrix
+	Dimensao_matrix		, { Value_assigned_matrix } }
+	Value_assigned_matrix		Value , Value_assigned_matrix
+	Value_assigned_matrix		Value
+	While		while ( ConditionalExpression ) { Body }
+	WhileProcedure		while ( ConditionalExpression ) { BodyProcedure }
+	BooleanLiteral		true
+	BooleanLiteral		false
+	ConditionalExpression		BooleanLiteral
+	ConditionalExpression		RelationalExpression
+	ConditionalExpression		LogicalExpression
+	If		if ( ConditionalExpression Then
+	Then		) then { Body } Else
+	Else		else { Body }
+	Else		 
+	IfProcedure		if ( ConditionalExpression ThenProcedure
+	ThenProcedure		) then { BodyProcedure } ElseProcedure
+	ElseProcedure		else { BodyProcedure }
+	ElseProcedure		 
+	Read		read ( FormalParameterListRead ) ;
+	Print		print ( FormalParameterList ) ;
+	Body		BodyItem Body
+	Body		 
+	BodyItem		VarDecl
+	BodyItem		While
+	BodyItem		If
+	BodyItem		Read
+	BodyItem		Print
+	BodyItem		Assign
+	BodyItem		ReturnStatement
+	ReturnStatement		return ;
+	ReturnStatement		return Assign
+	BodyProcedure		BodyItemProcedure BodyProcedure
+	BodyProcedure		 
+	BodyItemProcedure		VarDecl
+	BodyItemProcedure		WhileProcedure
+	BodyItemProcedure		IfProcedure
+	BodyItemProcedure		Read
+	BodyItemProcedure		Print
+	BodyItemProcedure		Assign
+	ConditionalOperator		&&
+	ConditionalOperator		||
+	LogicalDenied		! Identifier
+	LogicalDenied		! BooleanLiteral
+	LogicalDenied		! LogicalExpression
+	LogicalDenied		! RelationalExpression
+	Logical		ConditionalOperator ExpressionValueLogical
+	Logical		ConditionalOperator LogicalDenied
+	ExpressionValueLogical		Identifier
+	ExpressionValueLogical		BooleanLiteral
+	ExpressionValueLogical		StringLiteral
+	ExpressionValueLogical		FunctionCall
+	ExpressionValueLogical		RelationalExpression
+	LogicalExpression		ExpressionValueLogical Logical
+	LogicalExpression		LogicalDenied
+	RelationalExpression		Exp Relational
+	Relational		> Exp
+	Relational		< Exp
+	Relational		>= Exp
+	Relational		<= Exp
+	Relational		== Exp
+	Relational		!= Exp
+	Assign		PrefixGlobalLocal Identifier = Exp ;
+	Assign		Identifier = Exp ;
+	Assign		Identifier Vector Assignment_vector ;
+	Assign		Identifier Matrix Assignment_matrix ;
+	Assign		Exp ;
+	Exp		PrefixGlobalLocal Term AddExp
+	Exp		Term AddExp
+	AddExp		+ Exp
+	AddExp		- Exp
+	AddExp		 
+	Term		ExpressionValue MultExp
+	MultExp		* Term
+	MultExp		/ Term
+	MultExp		 
+	ExpressionValue		- ExpressionValue
+	ExpressionValue		Identifier
+	ExpressionValue		( Exp )
+	ExpressionValue		Number
+	ExpressionValue		BooleanLiteral
+	ExpressionValue		StringLiteral
+	ExpressionValue		FunctionCall
