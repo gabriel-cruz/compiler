@@ -1,6 +1,7 @@
 package lexicAnalyser;
 
 public class Token {
+	
 	public final int tag;
 	public final int line;
 	

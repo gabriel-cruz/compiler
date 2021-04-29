@@ -7,20 +7,31 @@ import java.util.stream.Collectors;
 import lexicAnalyser.Token;
 import lexicAnalyser.Word;
 import lexicAnalyser.Number;
+import lexicAnalyser.Tag;
 
 public class SyntacticAnalyser {
 
-	private List<Token> tokens = new ArrayList<Token>();;
-
+	//lista de tokens detectado no codigo fonte
+	private List<Token> tokens = new ArrayList<Token>();
+	// index que controla qual token será pego na lista
+	private int index = 0;
+	// armazena o token da frente
+	private Token lookahead;
+	
+	
 	public SyntacticAnalyser(List<Token> tokens) {
-		this.tokens = tokens;
+		this.tokens = tokens; //recebe a lista de tokens
+		lookahead = tokens.get(0); // começa com o primeiro token
 	}
 	
+	//método que realiza o filtro de tokens por linha
 	public List<Token> filterByLine(int line){
 		return tokens.stream().filter(t -> t.line == line).collect(Collectors.toList());
 	}
 	
+	//método que pega o lexema do token passado como argumento
 	public String getLexeme(Token token) {
+		// verifica qual sub-classe pertence o token
 		if(token.getClass() == Word.class) {
 			Word word = (Word) token;
 			return word.lexeme;
@@ -32,4 +43,125 @@ public class SyntacticAnalyser {
 			return " ";
 	}
 	
+	//método que realiza a comparação do que recebeu com o que era esperado
+	//obs: quando quiser comparar numero passa o waited como null que ai ele faz a comparação só pela TAG
+	public void match(Token token, String waited, int type) {
+		if(getLexeme(token).equals(waited) && type == token.tag) {
+			if(index < tokens.size() - 1) {
+				//pega o token da frente
+				index++;
+				lookahead = tokens.get(index);
+			}
+		}
+		else if(waited == null && type == token.tag) {
+			if(index < tokens.size() - 1) {
+				//pega o token da frente
+				index++;
+				lookahead = tokens.get(index);
+			}
+		}
+	}
+	
+	public void analyseCode(){
+		//analise atras de bloco de const
+		analyseConst();
+	}
+	
+	public void analyseConst(){
+		//verifica se o token da frente tem o lexema const
+		if(getLexeme(lookahead).equals("const")) {
+			//realiza a comparação do token esperado pelo recebido
+			match(lookahead,"const",Tag.PRE);
+			//verifica se o token da frente tem o lexema {
+			if(getLexeme(lookahead).equals("{")) {
+				match(lookahead,"{",Tag.DEL);
+				//função que realiza o procedimento de verificação de instâncias de atributos
+				attributeList();
+				//verifica se o token da frente tem o lexema }
+				if(getLexeme(lookahead).equals("}")) {
+					match(lookahead,"}",Tag.DEL);
+					System.out.println("Encontrou const");
+				}
+			}
+		}
+	}
+	
+	
+	public void attributeList() {
+		//laço que permite a verificação de linhas que possam ser atributos
+		while(true) {
+			if(lookahead.tag == Tag.PRE) {
+				attribute();
+			}
+			else return;
+		}
+	}
+	
+	public void attribute() {
+		switch(getLexeme(lookahead)) {
+			case "struct":
+				match(lookahead,"struct",Tag.PRE);
+				attributeValue();
+				break;
+			case "int":
+				match(lookahead,"int",Tag.PRE);
+				attributeValue();
+				break;
+			case "real":
+				match(lookahead,"real",Tag.PRE);
+				attributeValue();
+				break;
+			case "boolean":
+				match(lookahead,"boolean",Tag.PRE);
+				attributeValue();
+				break;
+			case "string":
+				match(lookahead,"string",Tag.PRE);
+				attributeValue();
+				break;		
+			}
+	}
+	
+	public void attributeValue() {
+		while(true) {
+			if(lookahead.tag == Tag.IDE){
+				match(lookahead, null, Tag.IDE);
+				if(getLexeme(lookahead).equals("=")) {
+					match(lookahead, "=", Tag.REL);
+					if(lookahead.tag == Tag.NRO) {
+						match(lookahead,null,Tag.NRO);
+						if(getLexeme(lookahead).equals(",")) {
+							match(lookahead,",",Tag.DEL);
+						}
+						if(getLexeme(lookahead).equals(";")) {
+							match(lookahead,";",Tag.DEL);
+							return;
+						}
+					}
+					if(lookahead.tag == Tag.PRE) {
+						if(getLexeme(lookahead).equals("true")) match(lookahead,"true",Tag.PRE);
+						if(getLexeme(lookahead).equals("false")) match(lookahead,"false",Tag.PRE);
+						if(getLexeme(lookahead).equals(",")) {
+							match(lookahead,",",Tag.DEL);
+						}
+						if(getLexeme(lookahead).equals(";")) {
+							match(lookahead,";",Tag.DEL);
+							return;
+						}
+					}
+					if(lookahead.tag == Tag.CAD) {
+						match(lookahead,null,Tag.CAD);
+						if(getLexeme(lookahead).equals(",")) {
+							match(lookahead,",",Tag.DEL);
+						}
+						if(getLexeme(lookahead).equals(";")) {
+							match(lookahead,";",Tag.DEL);
+							return;
+						}
+					}
+					
+				}
+			}
+		}
+	}
 }
