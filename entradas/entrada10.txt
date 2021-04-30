@@ -1,4 +1,4 @@
-const {
-	int a, b = 20;
+var {
+	int a, b;
 	boolean a = false, b = true;
 }

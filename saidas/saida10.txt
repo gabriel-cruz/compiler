@@ -1,13 +1,9 @@
-<0 PRE const>
+<0 PRE var>
 <0 DEL {>
 <1 PRE int>
 <1 IDE a>
-<1 REL =>
-<1 NRO 10>
 <1 DEL ,>
 <1 IDE b>
-<1 REL =>
-<1 NRO 20>
 <1 DEL ;>
 <2 PRE boolean>
 <2 IDE a>

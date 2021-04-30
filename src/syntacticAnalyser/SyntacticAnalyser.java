@@ -65,6 +65,7 @@ public class SyntacticAnalyser {
 	public void analyseCode(){
 		//analise atras de bloco de const
 		analyseConst();
+		analyseVar();
 	}
 	
 	public void analyseConst(){
@@ -76,7 +77,7 @@ public class SyntacticAnalyser {
 			if(getLexeme(lookahead).equals("{")) {
 				match(lookahead,"{",Tag.DEL);
 				//função que realiza o procedimento de verificação de instâncias de atributos
-				attributeList();
+				attributeList("const");
 				//verifica se o token da frente tem o lexema }
 				if(getLexeme(lookahead).equals("}")) {
 					match(lookahead,"}",Tag.DEL);
@@ -86,15 +87,41 @@ public class SyntacticAnalyser {
 		}
 	}
 	
+	public void analyseVar() {
+		if(getLexeme(lookahead).equals("var")) {
+			match(lookahead, "var", Tag.PRE);
+			
+			if(getLexeme(lookahead).equals("{")) {
+				match(lookahead, "{", Tag.DEL);
+				
+				attributeList("var");
+				
+				if(getLexeme(lookahead).equals("}")) {
+					match(lookahead, "}", Tag.DEL);
+					System.out.println("Encontrou var");
+				}
+			}
+		}
+	}
 	
-	public void attributeList() {
+	
+	public void attributeList(String type) {
 		//laço que permite a verificação de linhas que possam ser atributos
 		while(true) {
-			if(lookahead.tag == Tag.PRE) {
-				attribute();
+			if(type == "const") {
+				if(lookahead.tag == Tag.PRE) {
+					attribute();
+				}
+				else return;
 			}
-			else return;
-		}
+			
+			else if (type == "var"){
+				if(lookahead.tag == Tag.PRE) {
+					attributeVar();
+				}
+				else return;
+			}
+		}	
 	}
 	
 	public void attribute() {
@@ -118,6 +145,31 @@ public class SyntacticAnalyser {
 			case "string":
 				match(lookahead,"string",Tag.PRE);
 				attributeValue();
+				break;		
+			}
+	}
+	
+	public void attributeVar() {
+		switch(getLexeme(lookahead)) {
+			case "struct":
+				match(lookahead,"struct",Tag.PRE);
+				attributeValueVar();
+				break;
+			case "int":
+				match(lookahead,"int",Tag.PRE);
+				attributeValueVar();
+				break;
+			case "real":
+				match(lookahead,"real",Tag.PRE);
+				attributeValueVar();
+				break;
+			case "boolean":
+				match(lookahead,"boolean",Tag.PRE);
+				attributeValueVar();
+				break;
+			case "string":
+				match(lookahead,"string",Tag.PRE);
+				attributeValueVar();
 				break;		
 			}
 	}
@@ -160,6 +212,56 @@ public class SyntacticAnalyser {
 						}
 					}
 					
+				}//usar esse mesmo código para fazer a verificação do = no var, se não tiver o igual dar um else return nesse if
+			}
+		}
+	}
+	
+	public void attributeValueVar() {
+		while(true) {
+			if(lookahead.tag == Tag.IDE){
+				match(lookahead, null, Tag.IDE);
+				if(getLexeme(lookahead).equals("=")) {
+					match(lookahead, "=", Tag.REL);
+					if(lookahead.tag == Tag.NRO) {
+						match(lookahead,null,Tag.NRO);
+						if(getLexeme(lookahead).equals(",")) {
+							match(lookahead,",",Tag.DEL);
+						}
+						if(getLexeme(lookahead).equals(";")) {
+							match(lookahead,";",Tag.DEL);
+							return;
+						}
+					}
+					if(lookahead.tag == Tag.PRE) {
+						if(getLexeme(lookahead).equals("true")) match(lookahead,"true",Tag.PRE);
+						if(getLexeme(lookahead).equals("false")) match(lookahead,"false",Tag.PRE);
+						if(getLexeme(lookahead).equals(",")) {
+							match(lookahead,",",Tag.DEL);
+						}
+						if(getLexeme(lookahead).equals(";")) {
+							match(lookahead,";",Tag.DEL);
+							return;
+						}
+					}
+					if(lookahead.tag == Tag.CAD) {
+						match(lookahead,null,Tag.CAD);
+						if(getLexeme(lookahead).equals(",")) {
+							match(lookahead,",",Tag.DEL);
+						}
+						if(getLexeme(lookahead).equals(";")) {
+							match(lookahead,";",Tag.DEL);
+							return;
+						}
+					}
+					
+				}
+				if(getLexeme(lookahead).equals(",")) {
+					match(lookahead,",",Tag.DEL);
+				}
+				if(getLexeme(lookahead).equals(";")) {
+					match(lookahead,";",Tag.DEL);
+					return;
 				}
 			}
 		}
