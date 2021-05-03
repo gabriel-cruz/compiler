@@ -1,4 +1,21 @@
+const{
+	int a = 20, b = 10;
+	boolean a = false, b = true;
+}
 var {
 	int a, b;
 	boolean a = false, b = true;
 }
+
+function int soma(int a, int b){
+
+}
+
+procedure printError(int error){
+
+}
+
+function int sub(int a, int b){
+
+}
+

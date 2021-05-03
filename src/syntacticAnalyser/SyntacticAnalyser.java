@@ -1,8 +1,11 @@
 package syntacticAnalyser;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.sun.tools.javac.code.Attribute.Array;
 
 import lexicAnalyser.Token;
 import lexicAnalyser.Word;
@@ -66,7 +69,9 @@ public class SyntacticAnalyser {
 		//analise atras de bloco de const
 		analyseConst();
 		analyseVar();
+		analyseFunctionAndProcedureDeclaration();
 	}
+	
 	
 	public void analyseConst(){
 		//verifica se o token da frente tem o lexema const
@@ -145,8 +150,12 @@ public class SyntacticAnalyser {
 			case "string":
 				match(lookahead,"string",Tag.PRE);
 				attributeValue();
-				break;		
-			}
+				break;	
+			default:
+				match(lookahead,null,Tag.IDE);
+				attributeValue();
+				break;
+		}
 	}
 	
 	public void attributeVar() {
@@ -170,8 +179,12 @@ public class SyntacticAnalyser {
 			case "string":
 				match(lookahead,"string",Tag.PRE);
 				attributeValueVar();
-				break;		
-			}
+				break;
+			default:
+				match(lookahead,null,Tag.PRE);
+				attributeValueVar();
+				break;
+		}
 	}
 	
 	public void attributeValue() {
@@ -263,6 +276,76 @@ public class SyntacticAnalyser {
 					match(lookahead,";",Tag.DEL);
 					return;
 				}
+			}
+		}
+	}
+	
+	public void analyseFunctionAndProcedureDeclaration() {
+		List<String> keyWords = Arrays.asList("int","string","real","boolean");
+		while(true) {
+			if(getLexeme(lookahead).equals("function") && lookahead.tag == Tag.PRE) {
+				match(lookahead,"function",Tag.PRE);
+				if(keyWords.contains(getLexeme(lookahead))){
+					int indexKeyWord = keyWords.indexOf(getLexeme(lookahead));
+					match(lookahead,keyWords.get(indexKeyWord),Tag.PRE);
+					if(lookahead.tag == Tag.IDE) {
+						match(lookahead,null,Tag.IDE);
+						if(getLexeme(lookahead).equals("(") && lookahead.tag == Tag.DEL) {
+							match(lookahead,"(",Tag.DEL);
+							paramsList();
+							if(getLexeme(lookahead).equals(")") && lookahead.tag == Tag.DEL) {
+								match(lookahead,")",Tag.DEL);
+								if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
+									match(lookahead,"{",Tag.DEL);
+									if(getLexeme(lookahead).equals("}") && lookahead.tag == Tag.DEL) {
+										match(lookahead,"}",Tag.DEL);
+										System.out.println("Function");
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			else if(getLexeme(lookahead).equals("procedure") && lookahead.tag == Tag.PRE) {
+				match(lookahead,"procedure",Tag.PRE);
+				if(lookahead.tag == Tag.IDE) {
+					match(lookahead,null,Tag.IDE);
+					if(getLexeme(lookahead).equals("(") && lookahead.tag == Tag.DEL) {
+						match(lookahead,"(",Tag.DEL);
+						paramsList();
+						if(getLexeme(lookahead).equals(")") && lookahead.tag == Tag.DEL) {
+							match(lookahead,")",Tag.DEL);
+							if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
+								match(lookahead,"{",Tag.DEL);
+								if(getLexeme(lookahead).equals("}") && lookahead.tag == Tag.DEL) {
+									match(lookahead,"}",Tag.DEL);
+									System.out.println("Procedure");
+								}
+							}
+						}
+					}
+				}
+			}
+			else return;
+		}
+	}
+	
+	public void paramsList() {
+		List<String> keyWords = Arrays.asList("int","string","real","boolean");
+		while(true) {
+			if(keyWords.contains(getLexeme(lookahead))){
+				int indexKeyWord = keyWords.indexOf(getLexeme(lookahead));
+				match(lookahead,keyWords.get(indexKeyWord),Tag.PRE);
+				if(lookahead.tag == Tag.IDE) {
+					match(lookahead,null,Tag.IDE);
+					if(getLexeme(lookahead).equals(",") && lookahead.tag == Tag.DEL) {
+						match(lookahead,",",Tag.DEL);
+					}
+					else if(getLexeme(lookahead).equals(")") && lookahead.tag == Tag.DEL){
+						return;
+					}
+				}else return;
 			}
 		}
 	}
