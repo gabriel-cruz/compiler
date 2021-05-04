@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.sun.tools.javac.code.Attribute.Array;
+//import com.sun.tools.javac.code.Attribute.Array;
 
 import lexicAnalyser.Token;
 import lexicAnalyser.Word;
@@ -70,6 +70,8 @@ public class SyntacticAnalyser {
 		analyseConst();
 		analyseVar();
 		analyseFunctionAndProcedureDeclaration();
+		analyseStructDecl();
+		
 	}
 	
 	
@@ -104,6 +106,32 @@ public class SyntacticAnalyser {
 				if(getLexeme(lookahead).equals("}")) {
 					match(lookahead, "}", Tag.DEL);
 					System.out.println("Encontrou var");
+				}
+			}
+		}
+	}
+	
+	public void analyseStructDecl() {
+		//List<String> keyWords = Arrays.asList("int", "string", "real", "boolean");
+		
+		while(true) {
+			if(getLexeme(lookahead).equals("struct") && lookahead.tag == Tag.PRE) {
+				match(lookahead, "struct", Tag.PRE);
+				
+				if(lookahead.tag == Tag.IDE) {
+					match(lookahead, null, Tag.IDE);
+					
+					if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
+						match(lookahead, "{", Tag.DEL);
+						
+						attributeList("var");
+						
+					}
+					
+					if(getLexeme(lookahead).equals("}")) {
+						match(lookahead, "}", Tag.DEL);
+						System.out.println("Encontrou struct");
+					}
 				}
 			}
 		}
@@ -283,6 +311,7 @@ public class SyntacticAnalyser {
 	public void analyseFunctionAndProcedureDeclaration() {
 		List<String> keyWords = Arrays.asList("int","string","real","boolean");
 		while(true) {
+			
 			if(getLexeme(lookahead).equals("function") && lookahead.tag == Tag.PRE) {
 				match(lookahead,"function",Tag.PRE);
 				if(keyWords.contains(getLexeme(lookahead))){
@@ -331,6 +360,7 @@ public class SyntacticAnalyser {
 		}
 	}
 	
+	
 	public void paramsList() {
 		List<String> keyWords = Arrays.asList("int","string","real","boolean");
 		while(true) {
@@ -349,4 +379,5 @@ public class SyntacticAnalyser {
 			}
 		}
 	}
+	
 }

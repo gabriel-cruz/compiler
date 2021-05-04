@@ -7,6 +7,7 @@ var {
 	boolean a = false, b = true;
 }
 
+
 function int soma(int a, int b){
 
 }
@@ -19,3 +20,7 @@ function int sub(int a, int b){
 
 }
 
+struct pessoa{
+	int a, b;
+	boolean a = false, b = true;
+}
