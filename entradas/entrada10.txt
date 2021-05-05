@@ -3,7 +3,7 @@ const{
 	boolean a = false, b = true;
 }
 var {
-	int a, b;
+	int a[2][num] = {10,5}, b;
 	boolean a = false, b = true;
 }
 
@@ -23,4 +23,8 @@ function int sub(int a, int b){
 struct pessoa{
 	int a, b;
 	boolean a = false, b = true;
+}
+
+start(){
+
 }

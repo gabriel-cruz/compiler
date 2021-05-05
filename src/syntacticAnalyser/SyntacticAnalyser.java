@@ -71,9 +71,28 @@ public class SyntacticAnalyser {
 		analyseVar();
 		analyseFunctionAndProcedureDeclaration();
 		analyseStructDecl();
-		
+		analyseFuncionStart();
 	}
 	
+	public void analyseFuncionStart() {
+		if(getLexeme(lookahead).equals("start")) {
+			match(lookahead,"start",Tag.PRE);
+			if(getLexeme(lookahead).equals("(") && lookahead.tag == Tag.DEL) {
+				match(lookahead,"(",Tag.DEL);
+				if(getLexeme(lookahead).equals(")") && lookahead.tag == Tag.DEL) {
+					match(lookahead,")",Tag.DEL);
+					if(getLexeme(lookahead).equals("{")) {
+						System.out.println("testes");
+						match(lookahead,"{",Tag.DEL);
+						if(getLexeme(lookahead).equals("}")) {
+							match(lookahead,"}",Tag.DEL);
+							System.out.println("Start");
+						}
+					}
+				}
+			}
+		}
+	}
 	
 	public void analyseConst(){
 		//verifica se o token da frente tem o lexema const
@@ -112,8 +131,6 @@ public class SyntacticAnalyser {
 	}
 	
 	public void analyseStructDecl() {
-		//List<String> keyWords = Arrays.asList("int", "string", "real", "boolean");
-		
 		while(true) {
 			if(getLexeme(lookahead).equals("struct") && lookahead.tag == Tag.PRE) {
 				match(lookahead, "struct", Tag.PRE);
@@ -133,7 +150,7 @@ public class SyntacticAnalyser {
 						System.out.println("Encontrou struct");
 					}
 				}
-			}
+			}else break;
 		}
 	}
 	
@@ -262,6 +279,71 @@ public class SyntacticAnalyser {
 		while(true) {
 			if(lookahead.tag == Tag.IDE){
 				match(lookahead, null, Tag.IDE);
+				if(getLexeme(lookahead).equals("[")) {
+					while(true) {
+						if(getLexeme(lookahead).equals("[")) {
+							match(lookahead,"[",Tag.DEL);
+							if(lookahead.tag == Tag.NRO) {
+								match(lookahead, null, Tag.NRO);
+								if(getLexeme(lookahead).equals("]")) {
+									match(lookahead,"]",Tag.DEL);
+								}else {
+									//erro
+								}
+							}
+							if(lookahead.tag == Tag.IDE){
+								match(lookahead, null, Tag.IDE);
+								if(getLexeme(lookahead).equals("]")) {
+									match(lookahead,"]",Tag.DEL);
+								}else {
+									//erro
+								}
+							}
+						}
+						else break;
+					}
+					if(getLexeme(lookahead).equals("=")) {
+						match(lookahead, "=", Tag.REL);
+						if(getLexeme(lookahead).equals("{")) {
+							match(lookahead,"{",Tag.DEL);
+							while(true) {
+								if(lookahead.tag == Tag.IDE) {
+									match(lookahead, null, Tag.IDE);
+									if(getLexeme(lookahead).equals(",")) {
+										match(lookahead,",",Tag.DEL);
+									}
+								}
+								else if(lookahead.tag == Tag.CAD) {
+									match(lookahead, null, Tag.CAD);
+									if(getLexeme(lookahead).equals(",")) {
+										match(lookahead,",",Tag.DEL);
+									}
+								}
+								else if(lookahead.tag == Tag.NRO) {
+									match(lookahead, null, Tag.NRO);
+									if(getLexeme(lookahead).equals(",")) {
+										match(lookahead,",",Tag.DEL);
+									}
+								}
+								else break;
+							}
+							if(getLexeme(lookahead).equals("}")) {
+								match(lookahead,"}",Tag.DEL);
+								if(getLexeme(lookahead).equals(";")) {
+									match(lookahead,";",Tag.DEL);
+									return;
+								}
+							}
+						}
+					}
+					if(getLexeme(lookahead).equals(",")) {
+						match(lookahead,",",Tag.DEL);
+					}
+					if(getLexeme(lookahead).equals(";")) {
+						match(lookahead,";",Tag.DEL);
+						return;
+					}
+				}
 				if(getLexeme(lookahead).equals("=")) {
 					match(lookahead, "=", Tag.REL);
 					if(lookahead.tag == Tag.NRO) {
