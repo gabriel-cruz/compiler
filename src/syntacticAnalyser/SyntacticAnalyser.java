@@ -72,6 +72,7 @@ public class SyntacticAnalyser {
 		analyseFunctionAndProcedureDeclaration();
 		analyseStructDecl();
 		analyseFuncionStart();
+		analyseTypedef();
 	}
 	
 	public void analyseFuncionStart() {
@@ -138,19 +139,62 @@ public class SyntacticAnalyser {
 				if(lookahead.tag == Tag.IDE) {
 					match(lookahead, null, Tag.IDE);
 					
-					if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
-						match(lookahead, "{", Tag.DEL);
+					if(getLexeme(lookahead).equals("extends") && lookahead.tag == Tag.PRE) {
+						match(lookahead, "extends", Tag.PRE);
 						
-						attributeList("var");
+						if(lookahead.tag == Tag.IDE) {
+							match(lookahead, null, Tag.IDE);
+							
+							if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
+								match(lookahead, "{", Tag.DEL);
+								attributeList("var");
+								
+								if(getLexeme(lookahead).equals("}")) {
+									match(lookahead, "}", Tag.DEL);
+									System.out.println("Encontrou extends");
+									break;
+								}	
+							}
+						}
 						
 					}
 					
-					if(getLexeme(lookahead).equals("}")) {
-						match(lookahead, "}", Tag.DEL);
-						System.out.println("Encontrou struct");
+					if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
+						match(lookahead, "{", Tag.DEL);
+						attributeList("var");
+						
+						if(getLexeme(lookahead).equals("}")) {
+							match(lookahead, "}", Tag.DEL);
+							System.out.println("Encontrou struct");
+						}				
 					}
+					
+
 				}
 			}else break;
+		}
+	}
+	
+	public void analyseTypedef() {
+		List<String> keyWords = Arrays.asList("int","string", "struct","real","boolean");
+		
+		while(true) {
+			if(getLexeme(lookahead).equals("typedef") && lookahead.tag == Tag.PRE) {
+				match(lookahead, "typedef", Tag.PRE);
+				
+				if(keyWords.contains(getLexeme(lookahead))){
+					int indexKeyWord = keyWords.indexOf(getLexeme(lookahead));
+					match(lookahead,keyWords.get(indexKeyWord),Tag.PRE);
+					if(lookahead.tag == Tag.IDE) {
+						match(lookahead,null,Tag.IDE);
+						if(getLexeme(lookahead).equals(";")) {
+							match(lookahead,";",Tag.DEL);
+							System.out.println("Encontrou typedef");
+						}
+					}
+				}
+			}
+			else break; 
 		}
 	}
 	
@@ -270,7 +314,7 @@ public class SyntacticAnalyser {
 						}
 					}
 					
-				}//usar esse mesmo código para fazer a verificação do = no var, se não tiver o igual dar um else return nesse if
+				}
 			}
 		}
 	}
