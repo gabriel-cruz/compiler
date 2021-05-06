@@ -25,3 +25,10 @@ struct pessoa extends humano{
 	boolean a = false, b = true;
 }
 
+start(){
+	a = (10) + 10 / 20;
+	var {
+		int a[2][num] = {10,5}, b;
+		boolean a = false, b = true;
+	}
+}

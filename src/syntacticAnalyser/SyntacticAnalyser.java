@@ -83,8 +83,8 @@ public class SyntacticAnalyser {
 				if(getLexeme(lookahead).equals(")") && lookahead.tag == Tag.DEL) {
 					match(lookahead,")",Tag.DEL);
 					if(getLexeme(lookahead).equals("{")) {
-						System.out.println("testes");
 						match(lookahead,"{",Tag.DEL);
+						bodyProcedure();
 						if(getLexeme(lookahead).equals("}")) {
 							match(lookahead,"}",Tag.DEL);
 							System.out.println("Start");
@@ -505,5 +505,97 @@ public class SyntacticAnalyser {
 			}
 		}
 	}
+	
+	
+	public void bodyProcedure() {
+		while(true) {
+			if(getLexeme(lookahead).equals("var")) {
+				analyseVar();
+			}
+			else if(lookahead.tag == Tag.IDE) {
+				match(lookahead,null,Tag.IDE);
+				if(getLexeme(lookahead).equals("=") && lookahead.tag == Tag.REL) {
+					match(lookahead,"=",Tag.REL);
+					expression();
+				}
+			}
+			if(getLexeme(lookahead).equals("}")) {
+				break;
+			}
+		}
+	}
+	
+	
+	public void value() {
+		if(lookahead.tag == Tag.NRO) {
+			match(lookahead,null,Tag.NRO);
+		}
+		else if(lookahead.tag == Tag.IDE) {
+			match(lookahead,null,Tag.NRO);
+		}
+		else if(getLexeme(lookahead).equals("-")) {
+			match(lookahead,"-",Tag.ART);
+		}
+	}
+	
+	public void multExp() {
+		if(getLexeme(lookahead).equals("*")) {
+			match(lookahead,"*",Tag.ART);
+			
+		}
+		else if(getLexeme(lookahead).equals("/")) {
+			match(lookahead,"/",Tag.ART);
+		}
+	}
+	
+	public void addExp(){
+		if(getLexeme(lookahead).equals("+")) {
+			match(lookahead,"+",Tag.ART);
+			
+		}
+		else if(getLexeme(lookahead).equals("-")) {
+			match(lookahead,"-",Tag.ART);
+		}
+	}
+	
+	public void term() {
+		if(getLexeme(lookahead).equals("/") ||  getLexeme(lookahead).equals("*")) {
+			multExp();
+		}
+		else if(getLexeme(lookahead).equals("+") ||  getLexeme(lookahead).equals("-")) {
+			addExp();
+		}
+	}
+	
+	public void expression() {
+		int line = lookahead.line;
+		int openParentesis = 0;
+		while(true) {
+			int auxLine = lookahead.line;
+			if(getLexeme(lookahead).equals("(")) {
+				match(lookahead,"(",Tag.DEL);
+				openParentesis++;
+			}
+			value();
+			if(getLexeme(lookahead).equals("/") ||  getLexeme(lookahead).equals("*") || getLexeme(lookahead).equals("+") ||  getLexeme(lookahead).equals("-")) {
+				term();
+				//System.out.println(getLexeme(lookahead));
+			}
+			if(getLexeme(lookahead).equals(")") && openParentesis > 0) {
+				match(lookahead,")",Tag.DEL);
+				openParentesis--;
+			}
+			if(getLexeme(lookahead).equals(";") && openParentesis == 0) {
+				match(lookahead,";",Tag.DEL);
+				System.out.println("Expressao");
+				break;
+			}
+			if(line < auxLine) {
+				System.out.println("Error");
+				break;
+			}
+		}
+	}
+	
 	
 }
