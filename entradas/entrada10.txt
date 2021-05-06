@@ -20,11 +20,8 @@ function int sub(int a, int b){
 
 }
 
-struct pessoa{
+struct pessoa extends humano{
 	int a, b;
 	boolean a = false, b = true;
 }
 
-start(){
-
-}
