@@ -9,7 +9,10 @@ var {
 
 
 function int soma(int a, int b){
-
+	var{
+		int soma;
+	}
+	soma = a + b;
 }
 
 procedure printError(int error){
@@ -17,7 +20,7 @@ procedure printError(int error){
 }
 
 function int sub(int a, int b){
-
+	(20 != 10)
 }
 
 struct pessoa extends humano{
@@ -26,7 +29,9 @@ struct pessoa extends humano{
 }
 
 start(){
-	a = (10) + 10 / 20;
+	local.a = (10 + soma(10,20)) / 20 > 100;
+	procedure.printError(10);
+	sub(10,20);
 	var {
 		int a[2][num] = {10,5}, b;
 		boolean a = false, b = true;

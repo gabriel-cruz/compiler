@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-//import com.sun.tools.javac.code.Attribute.Array;
-
 import lexicAnalyser.Token;
 import lexicAnalyser.Word;
 import lexicAnalyser.Number;
@@ -84,7 +82,7 @@ public class SyntacticAnalyser {
 					match(lookahead,")",Tag.DEL);
 					if(getLexeme(lookahead).equals("{")) {
 						match(lookahead,"{",Tag.DEL);
-						bodyProcedure();
+						body(true);
 						if(getLexeme(lookahead).equals("}")) {
 							match(lookahead,"}",Tag.DEL);
 							System.out.println("Start");
@@ -158,7 +156,6 @@ public class SyntacticAnalyser {
 						}
 						
 					}
-					
 					if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
 						match(lookahead, "{", Tag.DEL);
 						attributeList("var");
@@ -437,7 +434,6 @@ public class SyntacticAnalyser {
 	public void analyseFunctionAndProcedureDeclaration() {
 		List<String> keyWords = Arrays.asList("int","string","real","boolean");
 		while(true) {
-			
 			if(getLexeme(lookahead).equals("function") && lookahead.tag == Tag.PRE) {
 				match(lookahead,"function",Tag.PRE);
 				if(keyWords.contains(getLexeme(lookahead))){
@@ -452,6 +448,7 @@ public class SyntacticAnalyser {
 								match(lookahead,")",Tag.DEL);
 								if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
 									match(lookahead,"{",Tag.DEL);
+									body(false);
 									if(getLexeme(lookahead).equals("}") && lookahead.tag == Tag.DEL) {
 										match(lookahead,"}",Tag.DEL);
 										System.out.println("Function");
@@ -473,6 +470,7 @@ public class SyntacticAnalyser {
 							match(lookahead,")",Tag.DEL);
 							if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
 								match(lookahead,"{",Tag.DEL);
+								body(true);
 								if(getLexeme(lookahead).equals("}") && lookahead.tag == Tag.DEL) {
 									match(lookahead,"}",Tag.DEL);
 									System.out.println("Procedure");
@@ -507,31 +505,137 @@ public class SyntacticAnalyser {
 	}
 	
 	
-	public void bodyProcedure() {
+	public void body(boolean isProcedure) {
 		while(true) {
+			//System.out.println(getLexeme(lookahead));
 			if(getLexeme(lookahead).equals("var")) {
 				analyseVar();
 			}
-			else if(lookahead.tag == Tag.IDE) {
-				match(lookahead,null,Tag.IDE);
-				if(getLexeme(lookahead).equals("=") && lookahead.tag == Tag.REL) {
-					match(lookahead,"=",Tag.REL);
-					expression();
+			else if(lookahead.tag == Tag.IDE ||getLexeme(lookahead).equals("global") || getLexeme(lookahead).equals("local") || getLexeme(lookahead).equals("procedure")) {
+				assign();
+			}
+			else if(getLexeme(lookahead).equals("(")) {
+				match(lookahead,"(",Tag.DEL);
+				relationalExpression();
+				if(getLexeme(lookahead).equals(")")) {
+					match(lookahead,")",Tag.DEL);
 				}
 			}
-			if(getLexeme(lookahead).equals("}")) {
+			else if(getLexeme(lookahead).equals("}")) {
 				break;
 			}
 		}
 	}
 	
+	public void assign() {
+		if(getLexeme(lookahead).equals("global") || getLexeme(lookahead).equals("local")) {
+			prefixGlobalOrLocal();
+			if(getLexeme(lookahead).equals("=") && lookahead.tag == Tag.REL) {
+				match(lookahead,"=",Tag.REL);
+				expression();
+				if(getLexeme(lookahead).equals(">") || getLexeme(lookahead).equals("<")|| getLexeme(lookahead).equals("=")|| getLexeme(lookahead).equals("!")) {
+					relational();
+				}
+				if(getLexeme(lookahead).equals(";")) {
+					match(lookahead,";",Tag.DEL);
+				}
+				if(getLexeme(lookahead).equals(";")) {
+					match(lookahead,";",Tag.DEL);
+				}
+			}
+		}
+		else if(lookahead.tag == Tag.IDE) {
+			match(lookahead,null,Tag.IDE);
+			if(getLexeme(lookahead).equals("=") && lookahead.tag == Tag.REL) {
+				match(lookahead,"=",Tag.REL);
+				expression();
+				if(getLexeme(lookahead).equals(">") || getLexeme(lookahead).equals("<")|| getLexeme(lookahead).equals("=")|| getLexeme(lookahead).equals("!")) {
+					relational();
+				}
+				if(getLexeme(lookahead).equals(";")) {
+					match(lookahead,";",Tag.DEL);
+				}
+			}
+			else if(getLexeme(lookahead).equals("(")) {
+				functionCall();
+				if(getLexeme(lookahead).equals(";")) {
+					match(lookahead,";",Tag.DEL);
+				}
+			}
+		}
+		else if(getLexeme(lookahead).equals("procedure")) {
+			match(lookahead,"procedure",Tag.PRE);
+			if(getLexeme(lookahead).equals(".")) {
+				match(lookahead,".",Tag.DEL);
+				if(lookahead.tag == Tag.IDE) {
+					if(getLexeme(lookahead).equals("(")) {
+						functionCall();
+						if(getLexeme(lookahead).equals(";")) {
+							match(lookahead,";",Tag.DEL);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	
+	public void functionCall(){
+		if(getLexeme(lookahead).equals("(") && lookahead.tag == Tag.DEL) {
+			match(lookahead,"(",Tag.DEL);
+			while(true) {
+				if(getLexeme(lookahead).equals(")") && lookahead.tag == Tag.DEL) {
+					match(lookahead,")",Tag.DEL);
+					break;
+				}
+				expression();
+				if(getLexeme(lookahead).equals(",") && lookahead.tag == Tag.DEL) {
+					match(lookahead,",",Tag.DEL);
+				}
+			}
+		}
+	}
+	
+	public void prefixGlobalOrLocal() {
+		if(getLexeme(lookahead).equals("global") && lookahead.tag == Tag.PRE) {
+			match(lookahead,"global",Tag.PRE);
+			if(getLexeme(lookahead).equals(".") && lookahead.tag == Tag.DEL) {
+				match(lookahead,".",Tag.DEL);
+				if(lookahead.tag == Tag.IDE) {
+					match(lookahead,null,Tag.IDE);
+				}
+			}
+		}
+		else if(getLexeme(lookahead).equals("local") && lookahead.tag == Tag.PRE) {
+			match(lookahead,"local",Tag.PRE);
+			if(getLexeme(lookahead).equals(".") && lookahead.tag == Tag.DEL) {
+				match(lookahead,".",Tag.DEL);
+				if(lookahead.tag == Tag.IDE) {
+					match(lookahead,null,Tag.IDE);
+				}
+			}
+		}
+	}
 	
 	public void value() {
-		if(lookahead.tag == Tag.NRO) {
+		if(getLexeme(lookahead).equals("global") || getLexeme(lookahead).equals("local")) {
+			prefixGlobalOrLocal();
+		}
+		else if(lookahead.tag == Tag.NRO) {
 			match(lookahead,null,Tag.NRO);
 		}
 		else if(lookahead.tag == Tag.IDE) {
-			match(lookahead,null,Tag.NRO);
+			match(lookahead,null,Tag.IDE);
+			if(getLexeme(lookahead).equals("(")) {
+				functionCall();
+			}
+		}
+		else if(getLexeme(lookahead).equals("(")) {
+			match(lookahead,"(",Tag.DEL);
+			expression();
+			if(getLexeme(lookahead).equals(")")) {
+				match(lookahead,")",Tag.DEL);
+			}
 		}
 		else if(getLexeme(lookahead).equals("-")) {
 			match(lookahead,"-",Tag.ART);
@@ -567,29 +671,41 @@ public class SyntacticAnalyser {
 		}
 	}
 	
+	public void relationalExpression() {
+		expression();
+		relational();
+	}
+	
+	public void relational() {
+		if(getLexeme(lookahead).equals(">")) {
+			match(lookahead,">", Tag.REL);
+		}
+		else if(getLexeme(lookahead).equals("<")) {
+			match(lookahead,"<", Tag.REL);
+		}
+		else if(getLexeme(lookahead).equals("=")) {
+			match(lookahead,"=", Tag.REL);
+		}
+		else if(getLexeme(lookahead).equals("!")) {
+			match(lookahead,"!", Tag.LOG);
+			if(getLexeme(lookahead).equals("=")) {
+				match(lookahead,"=", Tag.REL);
+			}
+		}
+		if(getLexeme(lookahead).equals("=")) {
+			match(lookahead,"=", Tag.REL);
+		}
+		expression();
+	}
+	
 	public void expression() {
 		int line = lookahead.line;
-		int openParentesis = 0;
 		while(true) {
 			int auxLine = lookahead.line;
-			if(getLexeme(lookahead).equals("(")) {
-				match(lookahead,"(",Tag.DEL);
-				openParentesis++;
-			}
 			value();
 			if(getLexeme(lookahead).equals("/") ||  getLexeme(lookahead).equals("*") || getLexeme(lookahead).equals("+") ||  getLexeme(lookahead).equals("-")) {
 				term();
-				//System.out.println(getLexeme(lookahead));
-			}
-			if(getLexeme(lookahead).equals(")") && openParentesis > 0) {
-				match(lookahead,")",Tag.DEL);
-				openParentesis--;
-			}
-			if(getLexeme(lookahead).equals(";") && openParentesis == 0) {
-				match(lookahead,";",Tag.DEL);
-				System.out.println("Expressao");
-				break;
-			}
+			}else break;
 			if(line < auxLine) {
 				System.out.println("Error");
 				break;
