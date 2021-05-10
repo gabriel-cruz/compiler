@@ -507,7 +507,7 @@ public class SyntacticAnalyser {
 	
 	public void body(boolean isProcedure) {
 		while(true) {
-			//System.out.println(getLexeme(lookahead));
+			System.out.println(getLexeme(lookahead));
 			if(getLexeme(lookahead).equals("var")) {
 				analyseVar();
 			}
@@ -516,9 +516,19 @@ public class SyntacticAnalyser {
 			}
 			else if(getLexeme(lookahead).equals("(")) {
 				match(lookahead,"(",Tag.DEL);
-				relationalExpression();
+				logicalExpression();
 				if(getLexeme(lookahead).equals(")")) {
 					match(lookahead,")",Tag.DEL);
+				}
+			}
+			
+			else if(getLexeme(lookahead).equals("return")) {
+				if(!isProcedure) {
+					match(lookahead,"return", Tag.PRE);
+					expression();
+					if(getLexeme(lookahead).equals(";")) {
+						match(lookahead,";",Tag.DEL);
+					}
 				}
 			}
 			else if(getLexeme(lookahead).equals("}")) {
@@ -533,7 +543,7 @@ public class SyntacticAnalyser {
 			if(getLexeme(lookahead).equals("=") && lookahead.tag == Tag.REL) {
 				match(lookahead,"=",Tag.REL);
 				expression();
-				if(getLexeme(lookahead).equals(">") || getLexeme(lookahead).equals("<")|| getLexeme(lookahead).equals("=")|| getLexeme(lookahead).equals("!")) {
+				if(lookahead.tag == Tag.REL) {
 					relational();
 				}
 				if(getLexeme(lookahead).equals(";")) {
@@ -549,7 +559,7 @@ public class SyntacticAnalyser {
 			if(getLexeme(lookahead).equals("=") && lookahead.tag == Tag.REL) {
 				match(lookahead,"=",Tag.REL);
 				expression();
-				if(getLexeme(lookahead).equals(">") || getLexeme(lookahead).equals("<")|| getLexeme(lookahead).equals("=")|| getLexeme(lookahead).equals("!")) {
+				if(lookahead.tag == Tag.REL) {
 					relational();
 				}
 				if(getLexeme(lookahead).equals(";")) {
@@ -637,6 +647,8 @@ public class SyntacticAnalyser {
 				match(lookahead,")",Tag.DEL);
 			}
 		}
+		else if(getLexeme(lookahead).equals("true")) match(lookahead,"true",Tag.PRE);
+		else if(getLexeme(lookahead).equals("false")) match(lookahead,"false",Tag.PRE);
 		else if(getLexeme(lookahead).equals("-")) {
 			match(lookahead,"-",Tag.ART);
 		}
@@ -672,28 +684,46 @@ public class SyntacticAnalyser {
 	}
 	
 	public void relationalExpression() {
-		expression();
-		relational();
+		if(lookahead.tag == Tag.CAD) {
+			match(lookahead, null, Tag.CAD);
+			if(getLexeme(lookahead).equals("==")) {
+				match(lookahead,"==", Tag.REL);
+				if(lookahead.tag == Tag.CAD) {
+					match(lookahead, null, Tag.CAD);
+				}
+			}
+			else if(getLexeme(lookahead).equals("!")) {
+				match(lookahead,"!", Tag.LOG);
+				if(getLexeme(lookahead).equals("=")) {
+					match(lookahead,"=", Tag.REL);
+					if(lookahead.tag == Tag.CAD) {
+						System.out.println("Teste");
+						match(lookahead, null, Tag.CAD);
+					}
+				}
+			}
+		}else {
+			expression();
+			relational();
+		}
 	}
 	
 	public void relational() {
-		if(getLexeme(lookahead).equals(">")) {
-			match(lookahead,">", Tag.REL);
-		}
-		else if(getLexeme(lookahead).equals("<")) {
-			match(lookahead,"<", Tag.REL);
-		}
-		else if(getLexeme(lookahead).equals("=")) {
-			match(lookahead,"=", Tag.REL);
-		}
-		else if(getLexeme(lookahead).equals("!")) {
-			match(lookahead,"!", Tag.LOG);
-			if(getLexeme(lookahead).equals("=")) {
-				match(lookahead,"=", Tag.REL);
-			}
-		}
-		if(getLexeme(lookahead).equals("=")) {
-			match(lookahead,"=", Tag.REL);
+		switch(getLexeme(lookahead)){
+			case ">":
+			case ">=":
+			case "<":
+			case "<=":
+			case "==":
+				match(lookahead,null, Tag.REL);
+				break;
+			default:
+				if(getLexeme(lookahead).equals("!")) {
+					match(lookahead,"!", Tag.LOG);
+					if(getLexeme(lookahead).equals("=")) {
+						match(lookahead,"=", Tag.REL);
+					}
+				}
 		}
 		expression();
 	}
@@ -713,5 +743,37 @@ public class SyntacticAnalyser {
 		}
 	}
 	
+	public void logicalExpression() {
+		System.out.println("logical");
+		if(getLexeme(lookahead).equals("!")) {
+			match(lookahead,"!", Tag.LOG);
+		}
+		if(getLexeme(lookahead).equals("true")) match(lookahead,"true",Tag.PRE);
+		else if(getLexeme(lookahead).equals("false")) match(lookahead,"false",Tag.PRE);
+		else if(getLexeme(lookahead).equals("global") || getLexeme(lookahead).equals("local")) {
+			prefixGlobalOrLocal();
+		}
+		else if(lookahead.tag == Tag.IDE) {
+			match(lookahead,null,Tag.IDE);
+			if(getLexeme(lookahead).equals("(")) {
+				functionCall();
+			}
+		}
+		logicalOperator();
+	}
+	
+	public void logicalOperator() {
+		if(getLexeme(lookahead).equals("&&")){
+			match(lookahead,"&&",Tag.LOG);
+			relationalExpression();
+		}
+		else if(getLexeme(lookahead).equals("||")){
+			match(lookahead,"||",Tag.LOG);
+			relationalExpression();
+		}
+		else {
+			
+		}
+	}
 	
 }

@@ -13,6 +13,7 @@ function int soma(int a, int b){
 		int soma;
 	}
 	soma = a + b;
+	return local.a + 10;
 }
 
 procedure printError(int error){
@@ -20,7 +21,7 @@ procedure printError(int error){
 }
 
 function int sub(int a, int b){
-	(20 != 10)
+	(teste() && "sam" == "sam")
 }
 
 struct pessoa extends humano{
@@ -29,7 +30,7 @@ struct pessoa extends humano{
 }
 
 start(){
-	local.a = (10 + soma(10,20)) / 20 > 100;
+	local.a = (10 + soma(10,20)) / 20 >= 100;
 	procedure.printError(10);
 	sub(10,20);
 	var {
