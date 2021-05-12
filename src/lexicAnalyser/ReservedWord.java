@@ -26,7 +26,7 @@ public class ReservedWord {
 		words.add("global");
 		words.add("local");
 		words.add("if");
-		words.add("false");
+		words.add("else");
 		words.add("while");
 		words.add("print");
 		words.add("read");

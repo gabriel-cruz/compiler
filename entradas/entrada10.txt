@@ -3,7 +3,7 @@ const{
 	boolean a = false, b = true;
 }
 var {
-	int a[2][num] = {10,5}, b;
+	int a[2] = {10,20};
 	boolean a = false, b = true;
 }
 
@@ -12,7 +12,7 @@ function int soma(int a, int b){
 	var{
 		int soma;
 	}
-	soma = a + b;
+	//soma[teste][2] = a + b;
 	return local.a + 10;
 }
 
@@ -21,7 +21,11 @@ procedure printError(int error){
 }
 
 function int sub(int a, int b){
-	(teste() && "sam" == "sam")
+	if(teste() && "sam" == "sam") then{
+		soma = a + b;
+	}else{
+		div = a / b;
+	}
 }
 
 struct pessoa extends humano{
@@ -34,7 +38,7 @@ start(){
 	procedure.printError(10);
 	sub(10,20);
 	var {
-		int a[2][num] = {10,5}, b;
+		//int a[2][num] = {10,5}, b;
 		boolean a = false, b = true;
 	}
 }
