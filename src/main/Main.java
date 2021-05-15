@@ -21,6 +21,7 @@ public class Main {
 			tokens = analyser.analyseCode(contentFile);
 			SyntacticAnalyser syntatic = new SyntacticAnalyser(tokens);
 			syntatic.analyseCode();
+			System.out.println("z:" + syntatic.erros.size());
 			if(analyser.getQntErrors() == 0) System.out.println("O arquivo " + file.getName() + " não possui erros léxicos");
 			int numberFile = Files.numberFile(file.getName());
 			Files.setContentFile(tokens, "./saidas/saida" + numberFile+ ".txt");

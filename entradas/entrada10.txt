@@ -1,12 +1,11 @@
 const{
-	int a = 20, b = 10;
-	boolean a = false, b = true;
-}
-var {
-	int a[2] = {10,20};
-	boolean a = false, b = true;
-}
 
+}
+var 
+	int a[2],b[2];
+	boolean a = false, b = true;
+	struct pessoa a = 10;
+}
 
 function int soma(int a, int b){
 	var{

@@ -14,6 +14,8 @@ public class SyntacticAnalyser {
 
 	//lista de tokens detectado no codigo fonte
 	private List<Token> tokens = new ArrayList<Token>();
+	//lista de erros sintaticos
+	public List<String> erros = new ArrayList<String>();
 	// index que controla qual token será pego na lista
 	private int index = 0;
 	// armazena o token da frente
@@ -63,6 +65,27 @@ public class SyntacticAnalyser {
 		}
 	}
 	
+	public void error(String msgError, List<Token> symbSyncronization) {
+		erros.add(msgError);
+		//procura os tokens de sincronização para poder continuar a verificação
+		while(true) {
+			if(symbSyncronization.contains(lookahead)) {
+				//achar o token com base somente na sua tag
+				if(getLexeme(lookahead).equals(" ")) break;
+				//achar o token com base somente na sua tag e lexeme
+				else {
+					int aux  = symbSyncronization.indexOf(lookahead);
+					if(getLexeme(lookahead).equals(getLexeme(symbSyncronization.get(aux)))) {
+						break;
+					}
+				}
+			}
+			index++;
+			lookahead = tokens.get(index);
+		}
+	}
+	
+	
 	public void analyseCode(){
 		//analise atras de bloco de const
 		analyseConst();
@@ -99,32 +122,54 @@ public class SyntacticAnalyser {
 			//realiza a comparação do token esperado pelo recebido
 			match(lookahead,"const",Tag.PRE);
 			//verifica se o token da frente tem o lexema {
-			if(getLexeme(lookahead).equals("{")) {
-				match(lookahead,"{",Tag.DEL);
-				//função que realiza o procedimento de verificação de instâncias de atributos
-				attributeList("const");
-				//verifica se o token da frente tem o lexema }
-				if(getLexeme(lookahead).equals("}")) {
-					match(lookahead,"}",Tag.DEL);
-					System.out.println("Encontrou const");
-				}
-			}
+		}
+		if(getLexeme(lookahead).equals("{")) {
+			match(lookahead,"{",Tag.DEL);
+		}else {
+			// a lista de sincronização são os tokens que tem a tag como PRE e lexeme (int,boolean,string,struct,real) e os first do não terminal pai
+			List<Token> symbSyncronization = Arrays.asList(
+					new Word("int",Tag.PRE,-1),
+					new Word("boolean",Tag.PRE,-1),
+					new Word("real",Tag.PRE,-1),
+					new Word("string",Tag.PRE,-1),
+					new Word("struct",Tag.PRE,-1),
+					new Word("}",Tag.DEL,-1),
+					new Word("function",Tag.PRE,-1),
+					new Word("var",Tag.PRE,-1),
+					new Word("procedure",Tag.PRE,-1),
+					new Word("struct",Tag.PRE,-1),
+					new Word("start",Tag.PRE,-1));
+			error("Esperava encontrar uma { depois do const na linha " + lookahead.line, symbSyncronization);
+		}
+		//função que realiza o procedimento de verificação de instâncias de atributos
+		attributeList("const");
+		//verifica se o token da frente tem o lexema }
+		if(getLexeme(lookahead).equals("}")) {
+			match(lookahead,"}",Tag.DEL);
+			System.out.println("Encontrou const");
+		}else {
+			List<Token> symbSyncronization = Arrays.asList(
+					new Word("function",Tag.PRE,-1),
+					new Word("var",Tag.PRE,-1),
+					new Word("procedure",Tag.PRE,-1),
+					new Word("struct",Tag.PRE,-1),
+					new Word("start",Tag.PRE,-1));
+			error("Esperava encontrar uma { depois do const na linha " + lookahead.line, symbSyncronization);
 		}
 	}
 	
 	public void analyseVar() {
 		if(getLexeme(lookahead).equals("var")) {
 			match(lookahead, "var", Tag.PRE);
+		}
+		if(getLexeme(lookahead).equals("{")) {
+			match(lookahead, "{", Tag.DEL);
 			
-			if(getLexeme(lookahead).equals("{")) {
-				match(lookahead, "{", Tag.DEL);
-				
-				attributeList("var");
-				
-				if(getLexeme(lookahead).equals("}")) {
-					match(lookahead, "}", Tag.DEL);
-					System.out.println("Encontrou var");
-				}
+			attributeList("var");
+			
+			if(getLexeme(lookahead).equals("}")) {
+				match(lookahead, "}", Tag.DEL);
+				System.out.println("Encontrou var");
 			}
 		}
 	}
@@ -133,42 +178,25 @@ public class SyntacticAnalyser {
 		while(true) {
 			if(getLexeme(lookahead).equals("struct") && lookahead.tag == Tag.PRE) {
 				match(lookahead, "struct", Tag.PRE);
-				
+			}else break;
+			if(lookahead.tag == Tag.IDE) {
+				match(lookahead, null, Tag.IDE);
+			}
+			if(getLexeme(lookahead).equals("extends") && lookahead.tag == Tag.PRE) {
+				match(lookahead, "extends", Tag.PRE);
 				if(lookahead.tag == Tag.IDE) {
 					match(lookahead, null, Tag.IDE);
 					
-					if(getLexeme(lookahead).equals("extends") && lookahead.tag == Tag.PRE) {
-						match(lookahead, "extends", Tag.PRE);
-						
-						if(lookahead.tag == Tag.IDE) {
-							match(lookahead, null, Tag.IDE);
-							
-							if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
-								match(lookahead, "{", Tag.DEL);
-								attributeList("var");
-								
-								if(getLexeme(lookahead).equals("}")) {
-									match(lookahead, "}", Tag.DEL);
-									System.out.println("Encontrou extends");
-									break;
-								}	
-							}
-						}
-						
-					}
-					if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
-						match(lookahead, "{", Tag.DEL);
-						attributeList("var");
-						
-						if(getLexeme(lookahead).equals("}")) {
-							match(lookahead, "}", Tag.DEL);
-							System.out.println("Encontrou struct");
-						}				
-					}
-					
-
-				}
-			}else break;
+				}	
+			}
+			if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
+				match(lookahead, "{", Tag.DEL);
+				attributeList("var");				
+			}
+			if(getLexeme(lookahead).equals("}")) {
+				match(lookahead, "}", Tag.DEL);
+				System.out.println("Encontrou struct");
+			}
 		}
 	}
 	
@@ -259,14 +287,14 @@ public class SyntacticAnalyser {
 	
 	public void attributeList(String type) {
 		//laço que permite a verificação de linhas que possam ser atributos
+		List<String> keyWords = Arrays.asList("int","string","real","boolean","struc");
 		while(true) {
 			if(type == "const") {
-				if(lookahead.tag == Tag.PRE) {
+				if(lookahead.tag == Tag.PRE && keyWords.contains(getLexeme(lookahead))) {
 					attribute();
 				}
 				else return;
 			}
-			
 			else if (type == "var"){
 				if(lookahead.tag == Tag.PRE) {
 					attributeVar();
@@ -299,9 +327,14 @@ public class SyntacticAnalyser {
 				attributeValue();
 				break;	
 			default:
-				match(lookahead,null,Tag.IDE);
-				attributeValue();
-				break;
+				if(lookahead.tag == Tag.IDE) {
+					match(lookahead,null,Tag.IDE);
+					attributeValue();
+				}
+				//continuar
+				else {
+					
+				}
 		}
 	}
 	
@@ -309,6 +342,8 @@ public class SyntacticAnalyser {
 		switch(getLexeme(lookahead)) {
 			case "struct":
 				match(lookahead,"struct",Tag.PRE);
+				if(lookahead.tag == Tag.IDE)
+					match(lookahead,null,Tag.IDE);
 				attributeValueVar();
 				break;
 			case "int":
