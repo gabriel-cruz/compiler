@@ -1,7 +1,9 @@
 const{
-
+	int a = 10, b = 20, c = 40;
+	boolean test = true;
+	string name  "Samuel";
 }
-var 
+var{
 	int a[2],b[2];
 	boolean a = false, b = true;
 	struct pessoa a = 10;
@@ -33,7 +35,7 @@ struct pessoa extends humano{
 }
 
 start(){
-	local.a = (10 + soma(10,20)) / 20 >= 100;
+	local.a = ( 10 + local.te - soma(10,20)) / 20 >= 100;
 	procedure.printError(10);
 	sub(10,20);
 	var {
