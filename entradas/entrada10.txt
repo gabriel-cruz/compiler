@@ -1,7 +1,7 @@
 const{
 	int a = 10, b = 20, c = 40;
 	boolean test = true;
-	string name  "Samuel";
+	string name = "Samuel";
 }
 var{
 	int a[2],b[2];
@@ -13,8 +13,11 @@ function int soma(int a, int b){
 	var{
 		int soma;
 	}
+	if(!teste) then {
+		
+	}
 	//soma[teste][2] = a + b;
-	return local.a + 10;
+	return local.a + b;
 }
 
 procedure printError(int error){
@@ -22,7 +25,7 @@ procedure printError(int error){
 }
 
 function int sub(int a, int b){
-	if(teste() && "sam" == "sam") then{
+	if(teste(10) == 10 && ) then{
 		soma = a + b;
 	}else{
 		div = a / b;
@@ -35,7 +38,7 @@ struct pessoa extends humano{
 }
 
 start(){
-	local.a = ( 10 + local.te - soma(10,20)) / 20 >= 100;
+	local.a = ( 10 + local.te - soma(10,20))  / 20 >= 100;
 	procedure.printError(10);
 	sub(10,20);
 	var {
