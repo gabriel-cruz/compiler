@@ -208,3 +208,17 @@
 <45 DEL ;>
 <46 DEL }>
 <47 DEL }>
+<1 DEL }>
+<3 PRE var>
+<3 DEL {>
+<5 DEL }>
+<8 PRE start>
+<8 DEL (>
+<8 DEL )>
+<8 DEL {>
+<9 PRE while>
+<9 DEL (>
+<9 IDE teste>
+<9 DEL )>
+<10 DEL }>
+<12 DEL }>

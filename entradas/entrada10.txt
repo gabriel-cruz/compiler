@@ -3,6 +3,7 @@ const{
 	boolean test = true;
 	string name = "Samuel";
 }
+
 var{
 	int a[2],b[2];
 	boolean a = false, b = true;
@@ -32,10 +33,6 @@ function int sub(int a, int b){
 	}
 }
 
-struct pessoa extends humano{
-	int a, b;
-	boolean a = false, b = true;
-}
 
 start(){
 	local.a = ( 10 + local.te - soma(10,20))  / 20 >= 100;
@@ -45,4 +42,5 @@ start(){
 		//int a[2][num] = {10,5}, b;
 		boolean a = false, b = true;
 	}
+	
 }
