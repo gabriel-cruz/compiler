@@ -40,11 +40,19 @@ public class Files {
 		}
 	}
 	
-	static public void setContentFile(List<Token> tokens, String path) {
+	static public void setContentFile(List<Token> tokens, List<String> syntaticErros, String path) {
 		List<String> lines = new ArrayList<String>();
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(path))){ //try-catch com iniciação
 			for(Token token : tokens) {
 				bw.write(token.toString());
+			}
+			if(!syntaticErros.isEmpty()) {
+				bw.write("Erros sintáticos : \n");
+				for(String erro : syntaticErros) {
+					bw.write(erro + "\n");
+				}
+			}else {
+				bw.write("Sem erros sintáticos\n");
 			}
 			bw.close(); //fecha o arquivo
 			
