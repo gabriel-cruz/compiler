@@ -16,7 +16,7 @@ public class SyntacticAnalyser {
 	private List<Token> tokens = new ArrayList<Token>();
 	//lista de erros sintaticos
 	private List<String> erros = new ArrayList<String>();
-	// index que controla qual token ser· pego na lista
+	// index que controla qual token ser√° pego na lista
 	private int index = 0;
 	// armazena o token da frente
 	private Token lookahead;
@@ -24,7 +24,7 @@ public class SyntacticAnalyser {
 	
 	public SyntacticAnalyser(List<Token> tokens) {
 		this.tokens = tokens; //recebe a lista de tokens
-		lookahead = tokens.get(0); // comeÁa com o primeiro token
+		lookahead = tokens.get(0); // come√ßa com o primeiro token
 	}
 	
 	
@@ -33,7 +33,7 @@ public class SyntacticAnalyser {
 		return erros;
 	}
 	
-	//mÈtodo que pega o lexema do token passado como argumento
+	//m√©todo que pega o lexema do token passado como argumento
 	public String getLexeme(Token token) {
 		// verifica qual sub-classe pertence o token
 		if(token.getClass() == Word.class) {
@@ -47,8 +47,8 @@ public class SyntacticAnalyser {
 			return " ";
 	}
 	
-	//mÈtodo que realiza a comparaÁ„o do que recebeu com o que era esperado
-	//obs: quando quiser comparar numero passa o waited como null que ai ele faz a comparaÁ„o sÛ pela TAG
+	//m√©todo que realiza a compara√ß√£o do que recebeu com o que era esperado
+	//obs: quando quiser comparar numero passa o waited como null que ai ele faz a compara√ß√£o s√≥ pela TAG
 	public void match(Token token, String waited, int type) {
 		if(getLexeme(token).equals(waited) && type == token.tag) {
 			if(index < tokens.size() - 1) {
@@ -70,7 +70,7 @@ public class SyntacticAnalyser {
 	
 	public void error(String msgError, List<Token> symbSyncronization) {
 		erros.add(msgError);
-		//procura os tokens de sincronizaÁ„o para poder continuar a verificaÁ„o
+		//procura os tokens de sincroniza√ß√£o para poder continuar a verifica√ß√£o
 		if(symbSyncronization == null) return;
 		while(true) {
 			if(index == tokens.size() - 1) break;
@@ -163,21 +163,20 @@ public class SyntacticAnalyser {
 		if(lookahead == null) return;
 		if(getLexeme(lookahead).equals("}")) {
 			match(lookahead,"}",Tag.DEL);
-			System.out.println("Start");
 		}
 	}
 	
 	public void analyseConst(){
 		//verifica se o token da frente tem o lexema const
 		if(getLexeme(lookahead).equals("const")) {
-			//realiza a comparaÁ„o do token esperado pelo recebido
+			//realiza a compara√ß√£o do token esperado pelo recebido
 			match(lookahead,"const",Tag.PRE);
 			//verifica se o token da frente tem o lexema {
 		} else return;
 		if(getLexeme(lookahead).equals("{")) {
 			match(lookahead,"{",Tag.DEL);
 		}else {
-			// a lista de sincronizaÁ„o s„o os tokens que tem a tag como PRE e lexeme (int,boolean,string,struct,real) e os first do n„o terminal pai
+			// a lista de sincroniza√ß√£o s√£o os tokens que tem a tag como PRE e lexeme (int,boolean,string,struct,real) e os first do n√£o terminal pai
 			List<Token> symbSyncronization = Arrays.asList(
 					new Word("int",Tag.PRE,-1),
 					new Word("boolean",Tag.PRE,-1),
@@ -192,7 +191,7 @@ public class SyntacticAnalyser {
 					new Word("start",Tag.PRE,-1));
 			error("Esperava encontrar uma { depois do const na linha " + lookahead.line, symbSyncronization);
 		}
-		//funÁ„o que realiza o procedimento de verificaÁ„o de inst‚ncias de atributos
+		//fun√ß√£o que realiza o procedimento de verifica√ß√£o de inst√¢ncias de atributos
 		attributeList("const");
 		//verifica se o token da frente tem o lexema }
 		if(getLexeme(lookahead).equals("}")) {
@@ -213,7 +212,6 @@ public class SyntacticAnalyser {
 			match(lookahead, "var", Tag.PRE);
 		} else return;
 		if(getLexeme(lookahead).equals("{")) {
-			System.out.println(getLexeme(lookahead));
 			match(lookahead, "{", Tag.DEL);
 		}
 		else {
@@ -236,7 +234,6 @@ public class SyntacticAnalyser {
 		
 		if(getLexeme(lookahead).equals("}")) {
 			match(lookahead, "}", Tag.DEL);
-			System.out.println("Encontrou var");
 		}
 		else {
 			List<Token> symbSyncronization = Arrays.asList(
@@ -307,7 +304,6 @@ public class SyntacticAnalyser {
 			}
 			if(getLexeme(lookahead).equals("}")) {
 				match(lookahead, "}", Tag.DEL);
-				System.out.println("Encontrou struct");
 			}
 			else {
 				List<Token> symbSyncronization = Arrays.asList(
@@ -434,7 +430,6 @@ public class SyntacticAnalyser {
 			
 			if(getLexeme(lookahead).equals(";")) {
 				match(lookahead,";",Tag.DEL);
-				System.out.println("Encontrou read");
 				break;
 			}
 			else {
@@ -473,7 +468,6 @@ public class SyntacticAnalyser {
 			while(true) {
 				if(lookahead.tag == Tag.CAD) {
 					match(lookahead,null,Tag.CAD);
-					System.out.println("entrou");
 				}
 				else if (lookahead.tag == Tag.IDE || lookahead.tag == Tag.NRO) {
 					expression();
@@ -490,7 +484,7 @@ public class SyntacticAnalyser {
 							new Word("print", Tag.PRE, -1),
 							new Word("}", Tag.DEL, -1)
 							);
-					error("Esperava encontrar uma string ou uma express„o na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar uma string ou uma express√£o na linha " + lookahead.line, symbSyncronization);
 				}
 					
 				if(getLexeme(lookahead).equals(",")) {
@@ -500,7 +494,6 @@ public class SyntacticAnalyser {
 				
 				else if(getLexeme(lookahead).equals(")")) {
 					match(lookahead, ")", Tag.DEL);
-					System.out.println("alguma coisa diferente " + getLexeme(lookahead));
 				}
 				
 				else {
@@ -536,20 +529,21 @@ public class SyntacticAnalyser {
 	}
 	
 	public void attributeList(String type) {
-		//laÁo que permite a verificaÁ„o de linhas que possam ser atributos
+		//la√ßo que permite a verifica√ß√£o de linhas que possam ser atributos
 		List<String> keyWords = Arrays.asList("int","string","real","boolean","struct");
 		while(true) {
 			if(type == "const") {
 				if(lookahead.tag == Tag.IDE || keyWords.contains(getLexeme(lookahead))) {
 					attribute();
 				}
-				else return;
+				else break;
+
 			}
 			else if (type == "var"){
-				if(lookahead.tag == Tag.PRE) {
+				if(lookahead.tag == Tag.IDE || keyWords.contains(getLexeme(lookahead))) {
 					attributeVar();
 				}
-				else return;
+				else break;
 			}
 		}	
 	}
@@ -580,7 +574,7 @@ public class SyntacticAnalyser {
 				if(lookahead.tag == Tag.IDE) {
 					match(lookahead,null,Tag.IDE);
 					attributeValue();
-				}
+				}	
 		}
 	}
 	
@@ -609,9 +603,13 @@ public class SyntacticAnalyser {
 				attributeValueVar();
 				break;
 			default:
-				match(lookahead,null,Tag.PRE);
-				attributeValueVar();
-				break;
+				if(lookahead.tag == Tag.IDE) {
+					match(lookahead,null,Tag.IDE);
+					attributeValueVar();
+				}
+				else{
+					
+				}
 		}
 	}
 	
@@ -625,7 +623,7 @@ public class SyntacticAnalyser {
 						new Word("=",Tag.REL,-1),
 						new Word(",",Tag.DEL,-1),
 						new Word(";",Tag.DEL,-1));
-				error("Esperava encontrar um identificador no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um identificador no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(getLexeme(lookahead).equals("=")) {
 				match(lookahead, "=", Tag.REL);
@@ -635,7 +633,7 @@ public class SyntacticAnalyser {
 						new Word(" ",Tag.CAD,-1),
 						new Word("true",Tag.PRE,-1),
 						new Word("false",Tag.PRE,-1));
-				error("Esperava encontrar o sÌmbolo de = no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o s√≠mbolo de = no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(lookahead.tag == Tag.NRO || lookahead.tag == Tag.IDE || lookahead.tag == Tag.PRE || getLexeme(lookahead).equals("-")) {
 				expression();	
@@ -648,7 +646,7 @@ public class SyntacticAnalyser {
 						new Word(" ",Tag.NRO,-1),
 						new Word(";",Tag.DEL,-1),
 						new Word(",",Tag.DEL,-1));
-				error("Esperava encontrar um n˙mero,identificador,true,false ou uma cadeia de caracteres no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um n√∫mero,identificador,true,false ou uma cadeia de caracteres no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(getLexeme(lookahead).equals(",")) {
 				match(lookahead,",",Tag.DEL);
@@ -671,7 +669,7 @@ public class SyntacticAnalyser {
 						new Word("struct",Tag.PRE,-1),
 						new Word("start",Tag.PRE,-1)
 						);
-				error("Esperava encontrar o sÌmbolo de , ou ; no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o s√≠mbolo de , ou ; no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
 				if(lookahead.tag == Tag.IDE) continue; 
 				else break;
 			}
@@ -680,22 +678,22 @@ public class SyntacticAnalyser {
 	
 	public void attributeValueVar() {
 		while(true) {
-			//System.out.println(getLexeme(lookahead));
 			if(lookahead.tag == Tag.IDE){
 				match(lookahead, null, Tag.IDE);
-				
 			}
+			
 			else {
 				List<Token> symbSyncronization = Arrays.asList(
-						new Word (" ", Tag.IDE, -1),
+						//new Word (" ", Tag.IDE, -1),
 						new Word ("=", Tag.REL, -1),
 						new Word (",", Tag.DEL, -1),
 						new Word ("[", Tag.DEL, -1),
-						new Word ("]", Tag.DEL, -1),
+						//new Word ("]", Tag.DEL, -1),
 						new Word (";", Tag.DEL, -1)
 						);
-				error("Esperava encontrar um identificador no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um identificador no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
 			}
+			
 			if(getLexeme(lookahead).equals("[")) {
 				int count = 0;
 				while(count < 2) {
@@ -703,82 +701,70 @@ public class SyntacticAnalyser {
 						match(lookahead, "[", Tag.DEL);
 						if(lookahead.tag == Tag.NRO) {
 							match(lookahead, null, Tag.NRO);
-							
+
+						}
+						else if(lookahead.tag == Tag.IDE) {
+							match(lookahead, null, Tag.IDE);
+						}
+						else {
+							List<Token> symbSyncronization = Arrays.asList(
+									new Word (",", Tag.DEL, -1),
+									new Word ("]", Tag.DEL, -1)
+									);
+							error("Esperava encontrar um identificador ou um n√∫mero no processo de atribui√ß√£o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
 						}
 						if(getLexeme(lookahead).equals("]")) {
 							match(lookahead, "]", Tag.DEL);
 							count++;
 						}
-						else if(lookahead.tag == Tag.IDE) {
-							match(lookahead, null, Tag.IDE);
-							if(getLexeme(lookahead).equals("]")) {
-								match(lookahead, "]", Tag.DEL);
-								count++;
-							}
-						}
 						else {
 							List<Token> symbSyncronization = Arrays.asList(
 									new Word (",", Tag.DEL, -1),
-									new Word ("[", Tag.DEL, -1),
-									new Word ("int",Tag.PRE,-1),
-									new Word ("boolean",Tag.PRE,-1),
-									new Word ("real",Tag.PRE,-1),
-									new Word ("string",Tag.PRE,-1),
-									new Word ("struct",Tag.PRE,-1),
-									new Word ("}",Tag.DEL,-1), 
-									new Word (";", Tag.DEL, -1)
+									new Word ("[", Tag.DEL, -1)
 									);
-							error("Esperava encontrar um ], identificador ou um n˙mero no processo de atribuiÁ„o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
+							error("Esperava encontrar um ] processo de atribui√ß√£o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
 						}
 					}
 					else count = 2;
 				}
-			}
-			
-			if(getLexeme(lookahead).equals("=")) {
-				match(lookahead, "=", Tag.REL);
-				if(getLexeme(lookahead).equals("{")) {
-					match(lookahead, "{", Tag.DEL);
+				if(getLexeme(lookahead).equals("=")) {
+					match(lookahead, "=", Tag.REL);
 					if(getLexeme(lookahead).equals("{")) {
-						attributeMatrix();
-					}else {
-						attributeVector();
+						match(lookahead, "{", Tag.DEL);
+						if(getLexeme(lookahead).equals("{")) {
+							attributeMatrix();
+						}else {
+							attributeVector();
+						}
 					}
 				}
-				
-				if(lookahead.tag == Tag.NRO || lookahead.tag == Tag.IDE || lookahead.tag == Tag.PRE || getLexeme(lookahead).equals("-")) {
-					expression();	
+			}
+			else if(getLexeme(lookahead).equals("=")) {
+				match(lookahead, "=", Tag.REL);
+				if(lookahead.tag == Tag.NRO || lookahead.tag == Tag.IDE || getLexeme(lookahead).equals("true") || getLexeme(lookahead).equals("false")) {
+					expression();
 				}
 				else if(lookahead.tag == Tag.CAD) {
 					match(lookahead,null,Tag.CAD);
+
 				}
 				else {
 					List<Token> symbSyncronization = Arrays.asList(
-							new Word(" ",Tag.NRO,-1),
-							new Word(";",Tag.DEL,-1),
-							new Word(",",Tag.DEL,-1));
-					error("Esperava encontrar um n˙mero, identificador, true, false ou uma cadeia de caracteres no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
-					System.out.println("errou aqui");
+							new Word (",", Tag.DEL, -1),
+							new Word (";", Tag.DEL, -1)
+							);
+					error("Esperava encontrar um n√∫mero, identificador, string ou um boolean no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
 				}
+				
 			}
-			/*else {
-				List<Token> symbSyncronization = Arrays.asList(
-						new Word(" ",Tag.NRO,-1),
-						new Word(" ",Tag.CAD,-1),
-						new Word("[", Tag.DEL, -1),
-						new Word("]", Tag.DEL, -1),
-						new Word("true",Tag.PRE,-1),
-						new Word("false",Tag.PRE,-1));
-				error("Esperava encontrar o sÌmbolo de = no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
-			}*/
-							
 			if(getLexeme(lookahead).equals(",")) {
 				match(lookahead,",",Tag.DEL);
 			}
 			else if(getLexeme(lookahead).equals(";")) {
 				match(lookahead,";",Tag.DEL);
 				return;
-			}else {
+			}
+			else {
 				List<Token> symbSyncronization = Arrays.asList(
 						new Word(" ",Tag.IDE,-1),
 						new Word("int",Tag.PRE,-1),
@@ -791,14 +777,22 @@ public class SyntacticAnalyser {
 						new Word("var",Tag.PRE,-1),
 						new Word("procedure",Tag.PRE,-1),
 						new Word("struct",Tag.PRE,-1),
-						new Word("start",Tag.PRE,-1)
+						new Word("start",Tag.PRE,-1),
+						new Word("if",Tag.PRE,-1),
+						new Word("while",Tag.PRE,-1),
+						new Word("print",Tag.PRE,-1),
+						new Word("read",Tag.PRE,-1),
+						new Word("global",Tag.PRE,-1),
+						new Word("local",Tag.PRE,-1)
 						);
-				error("Esperava encontrar o sÌmbolo de , ou ; no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o s√≠mbolo de , ou ; no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
 				if(lookahead.tag == Tag.IDE) continue; 
 				else break;
 			}
+			
 		}
 	}
+	
 	
 	public void attributeVector() {
 		while(true) {
@@ -848,7 +842,7 @@ public class SyntacticAnalyser {
 				}else {
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word(" ",Tag.IDE,-1));
-					error("Esperava encontrar int,real,string,boolean no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar int,real,string,boolean no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
 				}
 				if(lookahead.tag == Tag.IDE) {
 					match(lookahead,null,Tag.IDE);
@@ -857,7 +851,7 @@ public class SyntacticAnalyser {
 							new Word("(",Tag.DEL,-1),
 							new Word(" ",Tag.IDE,-1)
 							);
-					error("Esperava encontrar um identificador no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar um identificador no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
 				}
 				if(getLexeme(lookahead).equals("(") && lookahead.tag == Tag.DEL) {
 					match(lookahead,"(",Tag.DEL);
@@ -895,7 +889,7 @@ public class SyntacticAnalyser {
 							new Word("(",Tag.DEL,-1),
 							new Word(" ",Tag.IDE,-1)
 							);
-					error("Esperava encontrar um identificador no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar um identificador no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
 				}
 				if(getLexeme(lookahead).equals("(") && lookahead.tag == Tag.DEL) {
 					match(lookahead,"(",Tag.DEL);
@@ -978,7 +972,6 @@ public class SyntacticAnalyser {
 	
 	public void body(boolean isProcedure) {
 		while(true) {
-			//System.out.println(getLexeme(lookahead) + " l: " + lookahead.line);
 			if(lookahead.tag == Tag.END) {
 				error("Esperava encontrar uma } para finalizar o start", null);
 				break;
@@ -1033,7 +1026,7 @@ public class SyntacticAnalyser {
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word(";",Tag.DEL,-1)
 					);
-					error("Procedure n„o pode ter return ( linha " + lookahead.line + " )", symbSyncronization);
+					error("Procedure n√£o pode ter return ( linha " + lookahead.line + " )", symbSyncronization);
 					if(getLexeme(lookahead).equals(";")) {
 						match(lookahead,";",Tag.DEL);
 					}
@@ -1165,7 +1158,6 @@ public class SyntacticAnalyser {
 					new Word("}",Tag.DEL,-1)
 			);
 			error("Esperava encontrar um { na linha " + lookahead.line, symbSyncronization);
-			System.out.println("l: " + getLexeme(lookahead));
 		}
 		body(isProcedure);
 		if(getLexeme(lookahead).equals("}")) {
@@ -1234,7 +1226,6 @@ public class SyntacticAnalyser {
 		}
 		if(getLexeme(lookahead).equals("(")) {
 			match(lookahead, "(", Tag.DEL);
-			logicalExpression();
 		}
 		else {
 			List<Token> symbSyncronization = Arrays.asList(
@@ -1245,6 +1236,9 @@ public class SyntacticAnalyser {
 					);
 			error("Esperava encontrar um ( na linha " + lookahead.line, symbSyncronization);
 		}
+		
+		logicalExpression();
+		
 		if(getLexeme(lookahead).equals(")")) {
 			match(lookahead, ")", Tag.DEL);
 			
@@ -1259,7 +1253,6 @@ public class SyntacticAnalyser {
 		}
 		if(getLexeme(lookahead).equals("{")) {
 			match(lookahead, "{", Tag.DEL);
-			body(isProcedure);
 		}
 		else {
 			List<Token> symbSyncronization = Arrays.asList(
@@ -1272,9 +1265,11 @@ public class SyntacticAnalyser {
 					);
 			error("Esperava encontrar um { na linha " + lookahead.line, symbSyncronization);
 		}
+		
+		body(isProcedure);
+		
 		if(getLexeme(lookahead).equals("}")) {
 			match(lookahead, "}", Tag.DEL);
-			System.out.println("while");
 		}
 	}
 	
@@ -1301,7 +1296,7 @@ public class SyntacticAnalyser {
 									new Word(" ",Tag.NRO,-1),
 									new Word("]",Tag.CAD,-1)
 							);
-							error("Esperava encontrar um identificador ou n˙mero na linha " + lookahead.line, symbSyncronization);
+							error("Esperava encontrar um identificador ou n√∫mero na linha " + lookahead.line, symbSyncronization);
 						}
 						if(getLexeme(lookahead).equals("]")) {
 							match(lookahead, "]", Tag.DEL);
@@ -1404,7 +1399,6 @@ public class SyntacticAnalyser {
 		if(lookahead.tag == Tag.IDE) {
 			match(lookahead,null,Tag.IDE);
 		}else {
-			//System.out.println("a: " + getLexeme(lookahead) + " t: " + Tag.ART);
 			List<Token> symbSyncronization = Arrays.asList(
 					new Word("=",Tag.REL,-1),
 					new Word(";",Tag.DEL,-1),
@@ -1421,7 +1415,6 @@ public class SyntacticAnalyser {
 					new Word("!=",Tag.REL,-1)
 					);
 			error("Esperava encontrar um identificador depois do . na linha " + lookahead.line, symbSyncronization);
-			//System.out.println("t: " + getLexeme(lookahead));
 		}
 	}
 	
@@ -1500,8 +1493,7 @@ public class SyntacticAnalyser {
 					new Word("&&",Tag.LOG,-1),
 					new Word("||",Tag.LOG,-1)
 					);
-			error("Esperava encontrar um identificador,n˙mero,cadeia de caractÈres,true,false,global., local. ou - como valor dentro de uma express„o na linha " + lookahead.line, symbSyncronization);
-			//System.out.println("t: " + getLexeme(lookahead));
+			error("Esperava encontrar um identificador,n√∫mero,cadeia de caract√©res,true,false,global., local. ou - como valor dentro de uma express√£o na linha " + lookahead.line, symbSyncronization);
 		}
 	}
 	
@@ -1545,7 +1537,7 @@ public class SyntacticAnalyser {
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word(")",Tag.DEL,-1),
 							new Word(";",Tag.DEL,-1));
-					error("Esperava encontrar uma cadeia de caractÈres " + lookahead.line, symbSyncronization);	
+					error("Esperava encontrar uma cadeia de caract√©res " + lookahead.line, symbSyncronization);	
 				}
 			}
 			else if(getLexeme(lookahead).equals("!")) {
@@ -1555,11 +1547,10 @@ public class SyntacticAnalyser {
 					if(lookahead.tag == Tag.CAD) {
 						match(lookahead, null, Tag.CAD);
 					}else {
-						System.out.println("teste");
 						List<Token> symbSyncronization = Arrays.asList(
 								new Word(")",Tag.DEL,-1),
 								new Word(";",Tag.DEL,-1));
-						error("Esperava encontrar uma cadeia de caractÈres " + lookahead.line, symbSyncronization);	
+						error("Esperava encontrar uma cadeia de caract√©res " + lookahead.line, symbSyncronization);	
 					}
 				}else {
 					List<Token> symbSyncronization = Arrays.asList(
@@ -1599,7 +1590,7 @@ public class SyntacticAnalyser {
 							new Word(" ",Tag.IDE,-1),
 							new Word(" ",Tag.NRO,-1),
 							new Word(")",Tag.DEL,-1));
-					error("Esperava encontrar um == ou express„o logica na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar um == ou express√£o logica na linha " + lookahead.line, symbSyncronization);
 				}
 		}
 		expression();
