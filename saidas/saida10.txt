@@ -242,6 +242,6 @@
 <47 DEL ;>
 <48 DEL }>
 <49 DEL }>
-Erros sintáticos : 
-Esperava encontrar um identificador,número,cadeia de caractéres,true,false,global., local. ou - como valor dentro de uma expressão na linha 42
-Esperava encontrar um identificador,número,cadeia de caractéres,true,false,global., local. ou - como valor dentro de uma expressão na linha 42
+Erros sintÃ¡ticos : 
+Esperava encontrar um identificador,nÃºmero,cadeia de caractÃ©res,true,false,global., local. ou - como valor dentro de uma expressÃ£o na linha 42
+Esperava encontrar um identificador,nÃºmero,cadeia de caractÃ©res,true,false,global., local. ou - como valor dentro de uma expressÃ£o na linha 42
