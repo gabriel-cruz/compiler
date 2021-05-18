@@ -229,16 +229,6 @@ public class LexicAnalyser {
 	
 	private int automateAritOperator(int pointer, String analyse){
 		char peek = analyse.charAt(pointer);
-		if(peek == '+' || peek == '-'){
-			if(pointer + 1 < analyse.length()) { //verifica se chegou ao fim do buffer
-				char ahead = analyse.charAt(pointer+1);
-				if(ahead == peek) { //verifica questao ++ --
-					return pointer+2;
-				}else {
-					return pointer+1;
-				}
-			}
-		}
 		return pointer+1;
 	}
 	

@@ -21,12 +21,14 @@ function int soma(int a, int b){
 }
 
 procedure printError(int error){
-
+	if(!a)then{
+		a = a + 10;
+	}
 }
 
-function int sub(int a, int b){
-	if(teste(10) == 10 && ) then{
-		soma = a + b;
+function int test(int a, int a){
+	if (teste(10) == 10) then {
+		soma[a][b] = a + b;
 	}else{
 		div = a / b;
 	}
@@ -38,11 +40,11 @@ struct pessoa extends humano{
 }
 
 start(){
-	local.a = ( 10 + local.te - soma(10,20))  / 20 >= 100;
+	a.ok = ( 10 + a.teste ++ - soma(10,20));
 	procedure.printError(10);
 	sub(10,20);
 	var {
-		//int a[2][num] = {10,5}, b;
+		int a[2][num] = {10,5}, b;
 		boolean a = false, b = true;
 	}
-}
+}	
