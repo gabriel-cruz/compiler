@@ -101,13 +101,37 @@ public class SyntacticAnalyser {
 	
 	
 	public void analyseCode(){
-		//analise atras de bloco de const
-		analyseConst();
-		analyseVar();
-		analyseFunctionAndProcedureDeclaration();
-		analyseStructDecl();
-		analyseTypedef();
-		analyseFuncionStart();
+		while(true) {
+			//analise atras de bloco de const
+			if(getLexeme(lookahead).equals("const")) {
+				analyseConst();
+				continue;
+			}
+			else if(getLexeme(lookahead).equals("var")) {
+				analyseVar();
+				continue;
+			}
+			else if(getLexeme(lookahead).equals("function") || getLexeme(lookahead).equals("procedure")) {
+				analyseFunctionAndProcedureDeclaration();
+				continue;
+			}
+			else if(getLexeme(lookahead).equals("struct")) {
+				analyseStructDecl();
+				continue;
+			}
+			else if(getLexeme(lookahead).equals("typedef")) {
+				analyseTypedef();
+				continue;
+			}
+			if(getLexeme(lookahead).equals("start")) {
+				analyseFuncionStart();
+				break;
+			}
+			else{
+				erros.add("N„o encontrou a funÁ„o principal start");
+				break;
+			}
+		}
 	}
 	
 	public void analyseFuncionStart() {
@@ -250,6 +274,7 @@ public class SyntacticAnalyser {
 		while(true) {
 			if(getLexeme(lookahead).equals("struct") && lookahead.tag == Tag.PRE) {
 				match(lookahead, "struct", Tag.PRE);
+				
 			}else break;
 			if(lookahead.tag == Tag.IDE) {
 				match(lookahead, null, Tag.IDE);
@@ -484,7 +509,7 @@ public class SyntacticAnalyser {
 							new Word("print", Tag.PRE, -1),
 							new Word("}", Tag.DEL, -1)
 							);
-					error("Esperava encontrar uma string ou uma express√£o na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar uma string ou uma express„o na linha " + lookahead.line, symbSyncronization);
 				}
 					
 				if(getLexeme(lookahead).equals(",")) {
@@ -623,7 +648,7 @@ public class SyntacticAnalyser {
 						new Word("=",Tag.REL,-1),
 						new Word(",",Tag.DEL,-1),
 						new Word(";",Tag.DEL,-1));
-				error("Esperava encontrar um identificador no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um identificador no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(getLexeme(lookahead).equals("=")) {
 				match(lookahead, "=", Tag.REL);
@@ -633,7 +658,7 @@ public class SyntacticAnalyser {
 						new Word(" ",Tag.CAD,-1),
 						new Word("true",Tag.PRE,-1),
 						new Word("false",Tag.PRE,-1));
-				error("Esperava encontrar o s√≠mbolo de = no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o s√≠mbolo de = no processo de atribuiaÁ„o, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(lookahead.tag == Tag.NRO || lookahead.tag == Tag.IDE || lookahead.tag == Tag.PRE || getLexeme(lookahead).equals("-")) {
 				expression();	
@@ -646,7 +671,7 @@ public class SyntacticAnalyser {
 						new Word(" ",Tag.NRO,-1),
 						new Word(";",Tag.DEL,-1),
 						new Word(",",Tag.DEL,-1));
-				error("Esperava encontrar um n√∫mero,identificador,true,false ou uma cadeia de caracteres no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um n√∫mero,identificador,true,false ou uma cadeia de caracteres no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(getLexeme(lookahead).equals(",")) {
 				match(lookahead,",",Tag.DEL);
@@ -669,7 +694,7 @@ public class SyntacticAnalyser {
 						new Word("struct",Tag.PRE,-1),
 						new Word("start",Tag.PRE,-1)
 						);
-				error("Esperava encontrar o s√≠mbolo de , ou ; no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o sÌmbolo de , ou ; no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
 				if(lookahead.tag == Tag.IDE) continue; 
 				else break;
 			}
@@ -691,7 +716,7 @@ public class SyntacticAnalyser {
 						//new Word ("]", Tag.DEL, -1),
 						new Word (";", Tag.DEL, -1)
 						);
-				error("Esperava encontrar um identificador no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um identificador no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
 			}
 			
 			if(getLexeme(lookahead).equals("[")) {
@@ -711,7 +736,7 @@ public class SyntacticAnalyser {
 									new Word (",", Tag.DEL, -1),
 									new Word ("]", Tag.DEL, -1)
 									);
-							error("Esperava encontrar um identificador ou um n√∫mero no processo de atribui√ß√£o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
+							error("Esperava encontrar um identificador ou um n˙mero no processo de atribui√ß√£o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
 						}
 						if(getLexeme(lookahead).equals("]")) {
 							match(lookahead, "]", Tag.DEL);
@@ -722,7 +747,7 @@ public class SyntacticAnalyser {
 									new Word (",", Tag.DEL, -1),
 									new Word ("[", Tag.DEL, -1)
 									);
-							error("Esperava encontrar um ] processo de atribui√ß√£o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
+							error("Esperava encontrar um ] processo de atribuiÁ„o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
 						}
 					}
 					else count = 2;
@@ -753,7 +778,7 @@ public class SyntacticAnalyser {
 							new Word (",", Tag.DEL, -1),
 							new Word (";", Tag.DEL, -1)
 							);
-					error("Esperava encontrar um n√∫mero, identificador, string ou um boolean no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar um n√∫mero, identificador, string ou um boolean no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
 				}
 				
 			}
@@ -785,7 +810,7 @@ public class SyntacticAnalyser {
 						new Word("global",Tag.PRE,-1),
 						new Word("local",Tag.PRE,-1)
 						);
-				error("Esperava encontrar o s√≠mbolo de , ou ; no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o sÌmbolo de , ou ; no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
 				if(lookahead.tag == Tag.IDE) continue; 
 				else break;
 			}
@@ -842,7 +867,7 @@ public class SyntacticAnalyser {
 				}else {
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word(" ",Tag.IDE,-1));
-					error("Esperava encontrar int,real,string,boolean no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar int,real,string,boolean no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
 				}
 				if(lookahead.tag == Tag.IDE) {
 					match(lookahead,null,Tag.IDE);
@@ -851,7 +876,7 @@ public class SyntacticAnalyser {
 							new Word("(",Tag.DEL,-1),
 							new Word(" ",Tag.IDE,-1)
 							);
-					error("Esperava encontrar um identificador no processo de atribui√ß√£o, na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar um identificador no processo de atribuiÁ„o, na linha " + lookahead.line, symbSyncronization);
 				}
 				if(getLexeme(lookahead).equals("(") && lookahead.tag == Tag.DEL) {
 					match(lookahead,"(",Tag.DEL);
@@ -1026,7 +1051,7 @@ public class SyntacticAnalyser {
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word(";",Tag.DEL,-1)
 					);
-					error("Procedure n√£o pode ter return ( linha " + lookahead.line + " )", symbSyncronization);
+					error("Procedure n„o pode ter return ( linha " + lookahead.line + " )", symbSyncronization);
 					if(getLexeme(lookahead).equals(";")) {
 						match(lookahead,";",Tag.DEL);
 					}

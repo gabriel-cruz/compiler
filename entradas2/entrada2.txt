@@ -1,4 +1,0 @@
-ult int test
-@ |teste
-var [0]
-"teste

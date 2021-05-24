@@ -1,0 +1,48 @@
+const{
+	int a = 10, b = 20, c = 40;
+	boolean test = true;
+	string name = "Samuel";
+}
+
+var{
+	int a[2],b[2];
+	boolean a = false, b = true;
+	struct pessoa a = 10;
+}
+
+function int soma(int a, int b){
+	var{
+		int soma;
+	}
+	if(!teste) then {
+		
+	}
+	//soma[teste][2] = a + b;
+	return local.a + b;
+}
+
+procedure printError(int error){
+	if(!a)then{
+		a = a + 10;
+	}
+	return local.a + b;
+}
+
+function int test(int a, int a){
+	if (teste(10) == 10) then {
+		soma[a][b] = a + b;
+	}else{
+		div = a / b;
+	}
+}
+
+
+start(){
+	a.ok = ( 10 + a.teste +  + 10 - soma(10,20));
+	procedure.printError(10);
+	sub(10,20);
+	var {
+		int a[2][num] = {10,5}, b;
+		boolean a = false, b = true;
+	}
+}
