@@ -1,13 +1,12 @@
 const{
-	int a = 10, b = 20, c = 40;
-	boolean test = true;
-	string name = "Samuel";
+	int a = 10 + 20, b = 20, c = 30;
+	boolean test = false, test = false;
+	string teste = "certo";
 }
 
 var{
-	int a[2],b[2];
-	boolean a = false, b = true;
-	struct pessoa a = 10;
+	int a;
+	boolean a = 10, b = true;
 }
 
 function int soma(int a, int b){
@@ -28,7 +27,7 @@ procedure printError(int error){
 	return local.a + b;
 }
 
-function int test(int a, int a){
+function int test(int a, int b){
 	if (teste(10) == 10) then {
 		soma[a][b] = a + b;
 	}else{
@@ -42,7 +41,7 @@ start(){
 	procedure.printError(10);
 	sub(10,20);
 	var {
-		int a[2][num] = {10,5}, b;
+		int a, b;
 		boolean a = false, b = true;
 	}
 }
