@@ -27,7 +27,10 @@ public class FunctionTableSymbol {
 		parameters.put(name, type);
 	}
 	
-	
+	public void setParameters(Map<String, String> parameters) {
+		this.parameters = parameters;
+	}
+
 	public Map<String, String> getParameters() {
 		return parameters;
 	}
@@ -62,7 +65,6 @@ public class FunctionTableSymbol {
 		int result = 1;
 		result = prime * result + (isProcedure ? 1231 : 1237);
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		return result;
 	}
 
@@ -81,11 +83,6 @@ public class FunctionTableSymbol {
 			if (other.name != null)
 				return false;
 		} else if (!name.equals(other.name))
-			return false;
-		if (type == null) {
-			if (other.type != null)
-				return false;
-		} else if (!type.equals(other.type))
 			return false;
 		return true;
 	}

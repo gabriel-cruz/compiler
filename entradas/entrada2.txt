@@ -1,47 +1,35 @@
 const{
 	int a = 10 + 20, b = 20, c = 30;
-	boolean test = false, test = false;
+	boolean test = false, testbool = false;
 	string teste = "certo";
 }
 
 var{
-	int a;
-	boolean a = 10, b = true;
+	int va;
+	boolean ba = false, bb = true;
 }
 
 function int soma(int a, int b){
-	var{
-		int soma;
-	}
-	if(!teste) then {
-		
-	}
-	//soma[teste][2] = a + b;
-	return local.a + b;
+	return a + b;
 }
 
-procedure printError(int error){
-	if(!a)then{
-		a = a + 10;
+procedure printError(string error){
+	var{
+		int av = 10, bv = 20, result;
+		boolean vara;
 	}
-	return local.a + b;
+	resul = soma(av + vara,bv);
 }
 
 function int test(int a, int b){
-	if (teste(10) == 10) then {
-		soma[a][b] = a + b;
-	}else{
-		div = a / b;
+	var{
+		//int testvara;
+		boolean somab = true,adda = false;
 	}
+	testvara = soma(somab,adda);
 }
 
 
 start(){
-	a.ok = ( 10 + a.teste +  + 10 - soma(10,20));
-	procedure.printError(10);
-	sub(10,20);
-	var {
-		int a, b;
-		boolean a = false, b = true;
-	}
+	
 }

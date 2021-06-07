@@ -74,7 +74,6 @@ public class VariableSymbolRow {
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((scope == null) ? 0 : scope.hashCode());
 		result = prime * result + ((type == null) ? 0 : type.hashCode());
-		result = prime * result + ((typeData == null) ? 0 : typeData.hashCode());
 		return result;
 	}
 
@@ -101,11 +100,6 @@ public class VariableSymbolRow {
 			if (other.type != null)
 				return false;
 		} else if (!type.equals(other.type))
-			return false;
-		if (typeData == null) {
-			if (other.typeData != null)
-				return false;
-		} else if (!typeData.equals(other.typeData))
 			return false;
 		return true;
 	}
