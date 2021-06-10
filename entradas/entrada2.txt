@@ -1,5 +1,5 @@
 const{
-	int a = 10 + 20, b = 20, c = 30;
+	int a = 10 + 10, b = 10, c = 30;
 	boolean test = false, testbool = false;
 	string teste = "certo";
 }
@@ -9,8 +9,13 @@ var{
 	boolean ba = false, bb = true;
 }
 
-function int soma(int a, int b){
+function tesdas soma(int a, int b){
 	return a + b;
+}
+
+function int msg(string text, int a){
+	print(text);
+	return a;
 }
 
 procedure printError(string error){
@@ -18,15 +23,17 @@ procedure printError(string error){
 		int av = 10, bv = 20, result;
 		boolean vara;
 	}
-	resul = soma(av + vara,bv);
+	resul = msg("das",10) + 20;
+	resul = soma("da",bv) + 10;
 }
 
 function int test(int a, int b){
 	var{
 		//int testvara;
-		boolean somab = true,adda = false;
+		int somab = 20,adda = 10;
 	}
 	testvara = soma(somab,adda);
+	return 10;
 }
 
 

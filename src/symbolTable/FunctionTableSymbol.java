@@ -1,6 +1,7 @@
 package symbolTable;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class FunctionTableSymbol {
@@ -9,7 +10,7 @@ public class FunctionTableSymbol {
 	private String type;
 	private boolean isProcedure;
 	
-	private Map<String,String> parameters = new HashMap<String, String>();
+	private Map<String,String> parameters = new LinkedHashMap<String, String>();
 	
 	public FunctionTableSymbol() {
 		

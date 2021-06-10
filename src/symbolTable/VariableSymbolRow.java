@@ -4,13 +4,13 @@ public class VariableSymbolRow {
 	
 	//identificao única
 	private String id;
-	//nome do símbolo
+	//nome da variavel
 	private String name;
-	//tipo do símbolo (function, const or variable)
+	//tipo do símbolo (const or var)
 	private String type;
 	//saber se foi inicializado
 	private boolean initialized;
-	//o escopop
+	//o escopo
 	private String scope;
 	//tipo do valor controlado pelo símbolo
 	private String typeData;
