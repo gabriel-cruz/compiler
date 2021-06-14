@@ -9,30 +9,26 @@ var{
 	boolean ba = false, bb = true;
 }
 
-function tesdas soma(int a, int b){
-	return a + b;
-}
+typedef int inteiro;
 
-function int msg(string text, int a){
-	print(text);
-	return a;
+function int soma(int a, int b){
+	return a + b;
 }
 
 procedure printError(string error){
 	var{
 		int av = 10, bv = 20, result;
 		boolean vara;
+		string vector[2] = {"da","da"};
 	}
-	resul = msg("das",10) + 20;
-	resul = soma("da",bv) + 10;
+	av = 20 + 10;
+	result = bv + soma(av+10,bv);
 }
 
 function int test(int a, int b){
 	var{
-		//int testvara;
 		int somab = 20,adda = 10;
 	}
-	testvara = soma(somab,adda);
 	return 10;
 }
 
