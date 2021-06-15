@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 
 import lexicAnalyser.Token;
 import lexicAnalyser.Word;
 import symbolTable.VariableSymbolRow;
 import symbolTable.FunctionTableSymbol;
+import symbolTable.StructTableSymbol;
 import lexicAnalyser.Number;
 import lexicAnalyser.Tag;
 
@@ -26,6 +29,8 @@ public class SyntacticAnalyser {
 	Hashtable<String, VariableSymbolRow> symbolTable = new Hashtable<String, VariableSymbolRow>();
 	//Hashtable para a tabela de simbolos para funcao
 	Hashtable<String, FunctionTableSymbol> functionTableSymbol = new Hashtable<String, FunctionTableSymbol>();
+	//Hashtable para a table de simbolos para struct
+	Hashtable<String, StructTableSymbol> structTableSymbol = new Hashtable<String, StructTableSymbol>();
 	//Hashtable para a tabela de simbolos dos tipos dos dados
 	Hashtable<String, Integer> typeDataTableSymbol = new Hashtable<String, Integer>();
 	//lista para verifica��o semantica da equa��o a partir de valores fornecidos
@@ -356,11 +361,27 @@ public class SyntacticAnalyser {
 	
 	//m�todo para analisar o bloco struct
 	public void analyseStructDecl() {
+		StructTableSymbol simbolo;
+		String structName =  "";
 		while(true) {
 			if(getLexeme(lookahead).equals("struct") && lookahead.tag == Tag.PRE) {
 				match(lookahead, "struct", Tag.PRE);
 			}else break;
+			
+			simbolo = new StructTableSymbol();
 			if(lookahead.tag == Tag.IDE) {
+				boolean check = structTableSymbol.contains(new StructTableSymbol("", getLexeme(lookahead)));
+				
+				if(check) {
+					System.out.println("Erro semântico (struct): já existe uma struct com esse nome");
+				}
+				else {
+					simbolo.setName(getLexeme(lookahead));
+					structTableSymbol.put("struct_" + simbolo.getName(), new StructTableSymbol("struct_" + simbolo.getName(), getLexeme(lookahead)));
+					System.out.println(structTableSymbol.get("struct_" + simbolo.getName()));
+					structName = simbolo.getName();
+				}
+				
 				match(lookahead, null, Tag.IDE);
 			}
 			else {
@@ -394,7 +415,8 @@ public class SyntacticAnalyser {
 			}
 			if(getLexeme(lookahead).equals("{") && lookahead.tag == Tag.DEL) {
 				match(lookahead, "{", Tag.DEL);
-				attributeList("var","todo");				
+				attributeList("struct", structName);
+				System.out.println(getLexeme(lookahead));
 			}
 			else {
 				List<Token> symbSyncronization = Arrays.asList(
@@ -668,6 +690,13 @@ public class SyntacticAnalyser {
 				}
 				else break;
 			}
+
+			else if (type == "struct") {
+				if(lookahead.tag == Tag.IDE || keyWords.contains(getLexeme(lookahead))) {
+					attributeStruct(scope);
+				}
+				else break;
+			}
 		}	
 	}
 	
@@ -737,6 +766,38 @@ public class SyntacticAnalyser {
 				}
 		}
 	}
+	
+	public void attributeStruct(String name) {
+		switch(getLexeme(lookahead)) {
+			case "struct":
+				match(lookahead,"struct",Tag.PRE);
+				attributeValueStruct("struct", name);
+				break;
+			case "int":
+				match(lookahead,"int",Tag.PRE);
+				attributeValueStruct("int", name);
+				break;
+			case "real":
+				match(lookahead,"real",Tag.PRE);
+				attributeValueStruct("real", name);
+				break;
+			case "boolean":
+				match(lookahead,"boolean",Tag.PRE);
+				attributeValueStruct("boolean", name);
+				break;
+			case "string":
+				match(lookahead,"string",Tag.PRE);
+				attributeValueStruct("string", name);
+				break;	
+			default:
+				if(lookahead.tag == Tag.IDE) {
+					String type = getLexeme(lookahead);
+					match(lookahead,null,Tag.IDE);
+					attributeValueStruct(type, name);
+				}	
+		}
+	}
+	
 	
 	public void attributeValue(String type, String scope) {
 		VariableSymbolRow symbol;
@@ -974,6 +1035,60 @@ public class SyntacticAnalyser {
 			}
 			
 		}
+	}
+	
+	public void attributeValueStruct(String type, String name) {
+		StructTableSymbol symbol;
+		boolean existType = typeDataTableSymbol.containsKey(type);
+		symbol = structTableSymbol.get("struct_" + name);
+		while(true){
+			if(lookahead.tag == Tag.IDE){
+				if(symbol.getAttributes().containsKey(getLexeme(lookahead)))
+					System.out.println("Erro Sem�ntico (struct): J� existe essa vari�vel " + getLexeme(lookahead));
+				else if(existType) {
+					System.out.println(getLexeme(lookahead));
+					symbol.add(getLexeme(lookahead), type);
+				}
+				else
+					System.out.println("Erro Sem�ntico (struct): n�o existe esse tipo de variavel " + type);
+				match(lookahead, null, Tag.IDE);
+			}else {
+				List<Token> symbSyncronization = Arrays.asList(
+						new Word(" ",Tag.IDE,-1),
+						new Word("=",Tag.REL,-1),
+						new Word(",",Tag.DEL,-1),
+						new Word(";",Tag.DEL,-1));
+				error("Esperava encontrar um identificador no processo de atribui��o, na linha " + lookahead.line, symbSyncronization);
+			}
+			if(getLexeme(lookahead).equals(",")) {
+				match(lookahead,",",Tag.DEL);
+				structTableSymbol.replace("struct_" + name, symbol);
+			}
+			else if(getLexeme(lookahead).equals(";")) {
+				match(lookahead,";",Tag.DEL);
+				structTableSymbol.replace("struct_" + name, symbol);
+				return;
+			}else {
+				List<Token> symbSyncronization = Arrays.asList(
+						new Word(" ",Tag.IDE,-1),
+						new Word("int",Tag.PRE,-1),
+						new Word("boolean",Tag.PRE,-1),
+						new Word("real",Tag.PRE,-1),
+						new Word("string",Tag.PRE,-1),
+						new Word("struct",Tag.PRE,-1),
+						new Word("}",Tag.DEL,-1),
+						new Word("function",Tag.PRE,-1),
+						new Word("var",Tag.PRE,-1),
+						new Word("procedure",Tag.PRE,-1),
+						new Word("struct",Tag.PRE,-1),
+						new Word("start",Tag.PRE,-1)
+						);
+				error("Esperava encontrar o s�mbolo de , ou ; no processo de atribui��o, na linha " + lookahead.line, symbSyncronization);
+				if(lookahead.tag == Tag.IDE) continue; 
+				else break;
+			}
+		}
+		
 	}
 	
 	
