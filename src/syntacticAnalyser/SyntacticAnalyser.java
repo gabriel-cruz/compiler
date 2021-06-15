@@ -18,19 +18,19 @@ public class SyntacticAnalyser {
 	private List<Token> tokens = new ArrayList<Token>();
 	//lista de erros sintaticos
 	private List<String> erros = new ArrayList<String>();
-	// index que controla qual token será pego na lista
+	// index que controla qual token serï¿½ pego na lista
 	private int index = 0;
 	// armazena o token da frente
 	private Token lookahead;
-	//HashTable para a tabela de símbolos
+	//HashTable para a tabela de sï¿½mbolos
 	Hashtable<String, VariableSymbolRow> symbolTable = new Hashtable<String, VariableSymbolRow>();
 	//Hashtable para a tabela de simbolos para funcao
 	Hashtable<String, FunctionTableSymbol> functionTableSymbol = new Hashtable<String, FunctionTableSymbol>();
 	//Hashtable para a tabela de simbolos dos tipos dos dados
 	Hashtable<String, Integer> typeDataTableSymbol = new Hashtable<String, Integer>();
-	//lista para verificação semantica da equação a partir de valores fornecidos
+	//lista para verificaï¿½ï¿½o semantica da equaï¿½ï¿½o a partir de valores fornecidos
 	List<Token> lookExpressionData = new ArrayList<Token>();
-	//lista para verificação semantica da equação a partir das variaveis
+	//lista para verificaï¿½ï¿½o semantica da equaï¿½ï¿½o a partir das variaveis
 	List<VariableSymbolRow> lookExpressionVariable = new ArrayList<VariableSymbolRow>();
 	private VariableSymbolRow variableAssign = null;
 	private int indexlookExpressionData = 0;
@@ -38,7 +38,7 @@ public class SyntacticAnalyser {
 	
 	public SyntacticAnalyser(List<Token> tokens) {
 		this.tokens = tokens; //recebe a lista de tokens
-		lookahead = tokens.get(0); // começa com o primeiro token
+		lookahead = tokens.get(0); // comeï¿½a com o primeiro token
 		//tipos primitivos
 		typeDataTableSymbol.put("int", Tag.NRO);
 		typeDataTableSymbol.put("string", Tag.CAD);
@@ -50,7 +50,7 @@ public class SyntacticAnalyser {
 		return erros;
 	}
 	
-	//método que pega o lexema do token passado como argumento
+	//mï¿½todo que pega o lexema do token passado como argumento
 	public String getLexeme(Token token) {
 		// verifica qual sub-classe pertence o token
 		if(token.getClass() == Word.class) {
@@ -64,8 +64,8 @@ public class SyntacticAnalyser {
 			return " ";
 	}
 	
-	//método que realiza a comparação do que recebeu com o que era esperado
-	//obs: quando quiser comparar numero passa o waited como null que ai ele faz a comparação são pela TAG
+	//mï¿½todo que realiza a comparaï¿½ï¿½o do que recebeu com o que era esperado
+	//obs: quando quiser comparar numero passa o waited como null que ai ele faz a comparaï¿½ï¿½o sï¿½o pela TAG
 	public void match(Token token, String waited, int type) {
 		if(getLexeme(token).equals(waited) && type == token.tag) {
 			if(index < tokens.size() - 1) {
@@ -85,15 +85,15 @@ public class SyntacticAnalyser {
 		}
 	}
 	
-	//método para achar o token de sincromização
+	//mï¿½todo para achar o token de sincromizaï¿½ï¿½o
 	public void error(String msgError, List<Token> symbSyncronization) {
 		erros.add(msgError);
-		//procura os tokens de sincronização para poder continuar a verificação
+		//procura os tokens de sincronizaï¿½ï¿½o para poder continuar a verificaï¿½ï¿½o
 		if(symbSyncronization == null) return;
 		while(true) {
-			//se chegou ao final da lista de tokens e não achou o token de sicronização
+			//se chegou ao final da lista de tokens e nï¿½o achou o token de sicronizaï¿½ï¿½o
 			if(index == tokens.size() - 1) break;
-			//verica o token de sincronização pela tag
+			//verica o token de sincronizaï¿½ï¿½o pela tag
 			if(lookahead.tag == Tag.IDE) {
 				if(symbSyncronization.contains(new Word(" ", Tag.IDE, -1)))break;
 			}
@@ -119,7 +119,7 @@ public class SyntacticAnalyser {
 		}
 	}
 		
-	//método para verificar se todos os valores são do mesmo tipo
+	//mï¿½todo para verificar se todos os valores sï¿½o do mesmo tipo
 	public boolean lookExpression(int type, boolean seeParamFunction) {
 		boolean isEqualType = false;
 		boolean isInitialiazed = false;
@@ -154,13 +154,13 @@ public class SyntacticAnalyser {
 			indexlookExpressionData = 0;
 			indexlookExpressionVariable = 0;
 		}else {
-			//verifica se foram passados valores do tipo da atribuição
+			//verifica se foram passados valores do tipo da atribuiï¿½ï¿½o
 			//lookExpressionData.forEach(element -> System.out.println(element.tag + " " + element.line));
 			isEqualType = lookExpressionData.stream().allMatch(element -> element.tag == type);
-			//verifica se as variaveis estão inicializadas
+			//verifica se as variaveis estï¿½o inicializadas
 			//lookExpressionVariable.forEach(element -> System.out.println("type: " + type + " " + element.getName() + " "+ element.getScope() + " " + element.getTypeData()));
 			isInitialiazed = lookExpressionVariable.isEmpty() ? true : lookExpressionVariable.stream().allMatch(element -> element.isInitialized());
-			//verifica se as variaveis são do mesmo tipo que da atribuição
+			//verifica se as variaveis sï¿½o do mesmo tipo que da atribuiï¿½ï¿½o
 			isEqualTypeVariable = lookExpressionVariable.isEmpty() ? true: lookExpressionVariable.stream().allMatch(element -> typeDataTableSymbol.get(element.getTypeData()) == type);
 			lookExpressionData.clear();
 			lookExpressionVariable.clear();
@@ -181,7 +181,7 @@ public class SyntacticAnalyser {
 				analyseVar("global");
 				continue;
 			}
-			//analise atras funções e procedures
+			//analise atras funï¿½ï¿½es e procedures
 			else if(getLexeme(lookahead).equals("function") || getLexeme(lookahead).equals("procedure")) {
 				analyseFunctionAndProcedureDeclaration();
 				continue;
@@ -209,13 +209,13 @@ public class SyntacticAnalyser {
 				break;
 			}
 			else{
-				erros.add("Não encontrou a função principal start");
+				erros.add("Nï¿½o encontrou a funï¿½ï¿½o principal start");
 				break;
 			}
 		}
 	}
 	
-	//método para analisar a função start 
+	//mï¿½todo para analisar a funï¿½ï¿½o start 
 	public void analyseFuncionStart() {
 		if(getLexeme(lookahead).equals("start")) {
 			match(lookahead,"start",Tag.PRE);
@@ -272,18 +272,18 @@ public class SyntacticAnalyser {
 		}
 	}
 	
-	//método para analisar o bloco const
+	//mï¿½todo para analisar o bloco const
 	public void analyseConst(){
 		//verifica se o token da frente tem o lexema const
 		if(getLexeme(lookahead).equals("const")) {
-			//realiza a comparação do token esperado pelo recebido
+			//realiza a comparaï¿½ï¿½o do token esperado pelo recebido
 			match(lookahead,"const",Tag.PRE);
 			//verifica se o token da frente tem o lexema {
 		} else return;
 		if(getLexeme(lookahead).equals("{")) {
 			match(lookahead,"{",Tag.DEL);
 		}else {
-			// a lista de sincronização são os tokens que tem a tag como PRE e lexeme (int,boolean,string,struct,real) e os first do não terminal pai
+			// a lista de sincronizaï¿½ï¿½o sï¿½o os tokens que tem a tag como PRE e lexeme (int,boolean,string,struct,real) e os first do nï¿½o terminal pai
 			List<Token> symbSyncronization = Arrays.asList(
 					new Word("int",Tag.PRE,-1),
 					new Word("boolean",Tag.PRE,-1),
@@ -298,7 +298,7 @@ public class SyntacticAnalyser {
 					new Word("start",Tag.PRE,-1));
 			error("Esperava encontrar uma { depois do const na linha " + lookahead.line, symbSyncronization);
 		}
-		//função que realiza o procedimento de verificação de instâncias de atributos
+		//funï¿½ï¿½o que realiza o procedimento de verificaï¿½ï¿½o de instï¿½ncias de atributos
 		attributeList("const","global");
 		//verifica se o token da frente tem o lexema }
 		if(getLexeme(lookahead).equals("}")) {
@@ -314,7 +314,7 @@ public class SyntacticAnalyser {
 		}
 	}
 	
-	//método para analisar o bloco var
+	//mï¿½todo para analisar o bloco var
 	public void analyseVar(String scope) {
 		if(getLexeme(lookahead).equals("var")) {
 			match(lookahead, "var", Tag.PRE);
@@ -354,7 +354,7 @@ public class SyntacticAnalyser {
 		}
 	}
 	
-	//método para analisar o bloco struct
+	//mï¿½todo para analisar o bloco struct
 	public void analyseStructDecl() {
 		while(true) {
 			if(getLexeme(lookahead).equals("struct") && lookahead.tag == Tag.PRE) {
@@ -428,7 +428,7 @@ public class SyntacticAnalyser {
 		}
 	}
 	
-	//método para analisar o typedef
+	//mï¿½todo para analisar o typedef
 	public void analyseTypedef() {
 		List<String> keyWords = Arrays.asList("int","string", "struct","real","boolean");
 		while(true) {
@@ -495,7 +495,7 @@ public class SyntacticAnalyser {
 		}
 	}
 	
-	//método para analisar a função read
+	//mï¿½todo para analisar a funï¿½ï¿½o read
 	public void analyseRead() {
 		if(getLexeme(lookahead).equals("read") && lookahead.tag == Tag.PRE) {
 			match(lookahead, "read", Tag.PRE);
@@ -567,7 +567,7 @@ public class SyntacticAnalyser {
 		}
 	}
 	
-	//método para analisar a função print
+	//mï¿½todo para analisar a funï¿½ï¿½o print
 	public void analysePrint(String scope) {
 			if(getLexeme(lookahead).equals("print") && lookahead.tag == Tag.PRE) {
 				match(lookahead, "print", Tag.PRE);
@@ -607,7 +607,7 @@ public class SyntacticAnalyser {
 							new Word("print", Tag.PRE, -1),
 							new Word("}", Tag.DEL, -1)
 							);
-					error("Esperava encontrar uma string ou uma expressão na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar uma string ou uma expressï¿½o na linha " + lookahead.line, symbSyncronization);
 				}
 					
 				if(getLexeme(lookahead).equals(",")) {
@@ -652,7 +652,7 @@ public class SyntacticAnalyser {
 	}
 	
 	public void attributeList(String type,String scope) {
-		//laço que permite a verificação de linhas que possam ser atributos
+		//laï¿½o que permite a verificaï¿½ï¿½o de linhas que possam ser atributos
 		List<String> keyWords = Arrays.asList("int","string","real","boolean","struct");
 		while(true) {
 			if(type == "const") {
@@ -745,11 +745,11 @@ public class SyntacticAnalyser {
 			symbol = new VariableSymbolRow();
 			if(lookahead.tag == Tag.IDE){
 				if(symbolTable.contains(new VariableSymbolRow("", getLexeme(lookahead), "const",false, scope, type)))
-					System.out.println("Erro Semântico (const): Já existe essa variável " + getLexeme(lookahead));
+					System.out.println("Erro Semï¿½ntico (const): Jï¿½ existe essa variï¿½vel " + getLexeme(lookahead));
 				else if(existType) 
 					symbol.setName(getLexeme(lookahead));
 				else
-					System.out.println("Erro Semântico (const): não existe esse tipo de variavel " + type);
+					System.out.println("Erro Semï¿½ntico (const): nï¿½o existe esse tipo de variavel " + type);
 				match(lookahead, null, Tag.IDE);
 			}else {
 				List<Token> symbSyncronization = Arrays.asList(
@@ -757,7 +757,7 @@ public class SyntacticAnalyser {
 						new Word("=",Tag.REL,-1),
 						new Word(",",Tag.DEL,-1),
 						new Word(";",Tag.DEL,-1));
-				error("Esperava encontrar um identificador no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um identificador no processo de atribuiï¿½ï¿½o, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(getLexeme(lookahead).equals("=")) {
 				match(lookahead, "=", Tag.REL);
@@ -767,14 +767,14 @@ public class SyntacticAnalyser {
 						new Word(" ",Tag.CAD,-1),
 						new Word("true",Tag.PRE,-1),
 						new Word("false",Tag.PRE,-1));
-				error("Esperava encontrar o símbolo de = no processo de atribuiação, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o sï¿½mbolo de = no processo de atribuiaï¿½ï¿½o, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(lookahead.tag == Tag.NRO || lookahead.tag == Tag.IDE || lookahead.tag == Tag.PRE || getLexeme(lookahead).equals("-")) {
 				if(existType) {
 					expression(scope,false);
 					boolean isOnlyType = lookExpression(typeDataTableSymbol.get(type),false);
 					if(!isOnlyType)
-						System.out.println("Erro Semântico (const): atribuição errada");
+						System.out.println("Erro Semï¿½ntico (const): atribuiï¿½ï¿½o errada");
 				}else {
 					expression(scope,false);
 					lookExpressionData.clear();
@@ -784,7 +784,7 @@ public class SyntacticAnalyser {
 			else if(lookahead.tag == Tag.CAD) {
 				if(existType) {
 					if(typeDataTableSymbol.get(type) != Tag.CAD)
-						System.out.println("Erro Semântico (const): atribuição errada");
+						System.out.println("Erro Semï¿½ntico (const): atribuiï¿½ï¿½o errada");
 					match(lookahead,null,Tag.CAD);
 				}else
 					match(lookahead,null,Tag.CAD);
@@ -794,7 +794,7 @@ public class SyntacticAnalyser {
 						new Word(" ",Tag.NRO,-1),
 						new Word(";",Tag.DEL,-1),
 						new Word(",",Tag.DEL,-1));
-				error("Esperava encontrar um número,identificador,true,false ou uma cadeia de caracteres no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um nï¿½mero,identificador,true,false ou uma cadeia de caracteres no processo de atribuiï¿½ï¿½o, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(symbol.getName() != null)
 				symbolTable.put(scope + "_" + symbol.getName(), new VariableSymbolRow(scope + "_" + symbol.getName(), symbol.getName(), "const", true, scope, type));
@@ -819,7 +819,7 @@ public class SyntacticAnalyser {
 						new Word("struct",Tag.PRE,-1),
 						new Word("start",Tag.PRE,-1)
 						);
-				error("Esperava encontrar o símbolo de , ou ; no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o sï¿½mbolo de , ou ; no processo de atribuiï¿½ï¿½o, na linha " + lookahead.line, symbSyncronization);
 				if(lookahead.tag == Tag.IDE) continue; 
 				else break;
 			}
@@ -833,16 +833,16 @@ public class SyntacticAnalyser {
 			symbol = new VariableSymbolRow();
 			symbol.setInitialized(false);
 			if(lookahead.tag == Tag.IDE){
-				//serve para verificar se o var é global e que não exista uma const com o mesmo nome
+				//serve para verificar se o var ï¿½ global e que nï¿½o exista uma const com o mesmo nome
 				boolean verify =  scope.equals("global") ? symbolTable.contains(new VariableSymbolRow("",getLexeme(lookahead),"const", false, "global", type)) : false;
 				boolean check = symbolTable.contains(new VariableSymbolRow("",getLexeme(lookahead),"var", false, scope, type));
 				if(check || verify) {
-					System.out.println("Erro semântico (var): já exite variavel com esse nome");
+					System.out.println("Erro semï¿½ntico (var): jï¿½ exite variavel com esse nome");
 				}
 				else if(existType) 
 					symbol.setName(getLexeme(lookahead));
 				else
-					System.out.println("Erro Semântico (const): não existe esse tipo de variavel " + type);
+					System.out.println("Erro Semï¿½ntico (const): nï¿½o existe esse tipo de variavel " + type);
 				match(lookahead, null, Tag.IDE);
 			}
 			else {
@@ -854,7 +854,7 @@ public class SyntacticAnalyser {
 						//new Word ("]", Tag.DEL, -1),
 						new Word (";", Tag.DEL, -1)
 						);
-				error("Esperava encontrar um identificador no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um identificador no processo de atribuiï¿½ï¿½o, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(getLexeme(lookahead).equals("[")) {
 				int count = 0;
@@ -865,14 +865,14 @@ public class SyntacticAnalyser {
 						if(lookahead.tag == Tag.NRO || lookahead.tag == Tag.IDE) {
 							expression(scope,false);
 							boolean isOnlyType = lookExpression(Tag.NRO,false);
-							if(!isOnlyType)System.out.println("Erro semântico: Na declaração de vetores os indices são do tipo int");
+							if(!isOnlyType)System.out.println("Erro semï¿½ntico: Na declaraï¿½ï¿½o de vetores os indices sï¿½o do tipo int");
 						}
 						else {
 							List<Token> symbSyncronization = Arrays.asList(
 									new Word (",", Tag.DEL, -1),
 									new Word ("]", Tag.DEL, -1)
 									);
-							error("Esperava encontrar um identificador ou um número no processo de atribuição de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
+							error("Esperava encontrar um identificador ou um nï¿½mero no processo de atribuiï¿½ï¿½o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
 						}
 						if(getLexeme(lookahead).equals("]")) {
 							match(lookahead, "]", Tag.DEL);
@@ -884,7 +884,7 @@ public class SyntacticAnalyser {
 									new Word (",", Tag.DEL, -1),
 									new Word ("[", Tag.DEL, -1)
 									);
-							error("Esperava encontrar um ] processo de atribuição de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
+							error("Esperava encontrar um ] processo de atribuiï¿½ï¿½o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
 						}
 					}
 					else count = 2;
@@ -894,10 +894,10 @@ public class SyntacticAnalyser {
 					if(getLexeme(lookahead).equals("{")) {
 						match(lookahead, "{", Tag.DEL);
 						if(getLexeme(lookahead).equals("{")) {
-							if(dimension == 1) System.out.println("Erro semântico: dimensão errada da alocação de memória");
+							if(dimension == 1) System.out.println("Erro semï¿½ntico: dimensï¿½o errada da alocaï¿½ï¿½o de memï¿½ria");
 							attributeMatrix(scope,type);
 						}else {
-							if(dimension == 2) System.out.println("Erro semântico: dimensão errada da alocação de memória");
+							if(dimension == 2) System.out.println("Erro semï¿½ntico: dimensï¿½o errada da alocaï¿½ï¿½o de memï¿½ria");
 							attributeVector(scope,type);
 						}
 					}
@@ -911,7 +911,7 @@ public class SyntacticAnalyser {
 						symbol.setInitialized(true);
 						boolean isOnlyType = lookExpression(typeDataTableSymbol.get(type),false);
 						if(!isOnlyType)
-							System.out.println("Erro Semântico (const): atribuição errada");
+							System.out.println("Erro Semï¿½ntico (const): atribuiï¿½ï¿½o errada");
 					}else {
 						expression(scope,false);
 						lookExpressionData.clear();
@@ -922,7 +922,7 @@ public class SyntacticAnalyser {
 					if(existType) {
 						symbol.setInitialized(true);
 						if(typeDataTableSymbol.get(type) != Tag.CAD)
-							System.out.println("Erro Semântico (const): atribuição errada");
+							System.out.println("Erro Semï¿½ntico (const): atribuiï¿½ï¿½o errada");
 						match(lookahead,null,Tag.CAD);
 					}else
 						match(lookahead,null,Tag.CAD);
@@ -932,7 +932,7 @@ public class SyntacticAnalyser {
 							new Word (",", Tag.DEL, -1),
 							new Word (";", Tag.DEL, -1)
 							);
-					error("Esperava encontrar um número, identificador, string ou um boolean no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar um nï¿½mero, identificador, string ou um boolean no processo de atribuiï¿½ï¿½o, na linha " + lookahead.line, symbSyncronization);
 				}
 				
 			}
@@ -968,7 +968,7 @@ public class SyntacticAnalyser {
 						new Word("global",Tag.PRE,-1),
 						new Word("local",Tag.PRE,-1)
 						);
-				error("Esperava encontrar o símbolo de , ou ; no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o sï¿½mbolo de , ou ; no processo de atribuiï¿½ï¿½o, na linha " + lookahead.line, symbSyncronization);
 				if(lookahead.tag == Tag.IDE) continue; 
 				else break;
 			}
@@ -981,19 +981,19 @@ public class SyntacticAnalyser {
 		while(true) {
 			if(lookahead.tag == Tag.CAD) {
 				if(typeDataTableSymbol.get(type) != Tag.CAD) 
-					System.out.println("Erro semântico: alocagem de informação com o tipo de dado errado");
+					System.out.println("Erro semï¿½ntico: alocagem de informaï¿½ï¿½o com o tipo de dado errado");
 				match(lookahead, null, Tag.CAD);
 			}
 			else {
 				if(typeDataTableSymbol.get(type) == Tag.CAD) {
-					System.out.println("Erro semântico: alocagem de informação com o tipo de dado errado");
+					System.out.println("Erro semï¿½ntico: alocagem de informaï¿½ï¿½o com o tipo de dado errado");
 					expression(scope,false);	
 					lookExpressionData.clear();
 					lookExpressionVariable.clear();
 				}else {
 					expression(scope,false);	
 					boolean isOnlyType = lookExpression(typeDataTableSymbol.get(type),false);
-					if(!isOnlyType) System.out.println("Erro semântico: alocagem de informação com o tipo de dado errado");
+					if(!isOnlyType) System.out.println("Erro semï¿½ntico: alocagem de informaï¿½ï¿½o com o tipo de dado errado");
 				}
 			}
 			if(getLexeme(lookahead).equals(",")) {
@@ -1033,14 +1033,14 @@ public class SyntacticAnalyser {
 					function.setType(getLexeme(lookahead));
 					match(lookahead,getLexeme(lookahead),lookahead.tag);
 				}else {
-					if(lookahead.tag == Tag.IDE) { //ignora o identificador que foi passado como retorno da função
+					if(lookahead.tag == Tag.IDE) { //ignora o identificador que foi passado como retorno da funï¿½ï¿½o
 						match(lookahead,null,Tag.IDE);
 					}
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word(" ",Tag.IDE,-1));
 					function.setProcedure(true);
 					System.out.println("Erro no tipo do retorno ");
-					error("Erro Sintático/Semântico: Esperava encontrar um tipo existente no processo de atribuição do retorno da função, na linha " + lookahead.line, symbSyncronization);
+					error("Erro Sintï¿½tico/Semï¿½ntico: Esperava encontrar um tipo existente no processo de atribuiï¿½ï¿½o do retorno da funï¿½ï¿½o, na linha " + lookahead.line, symbSyncronization);
 				}
 				if(lookahead.tag == Tag.IDE) {
 					name = getLexeme(lookahead);
@@ -1049,14 +1049,14 @@ public class SyntacticAnalyser {
 					if(!functionTableSymbol.contains(new FunctionTableSymbol("", name, "", false))) {
 						functionTableSymbol.put("func_" + name, new FunctionTableSymbol("func_" + name, function.getName(), function.getType(), function.isProcedure()));
 					}else {
-						System.out.println("Já existe função com esse nome");
+						System.out.println("Jï¿½ existe funï¿½ï¿½o com esse nome");
 					}
 				}else {
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word("(",Tag.DEL,-1),
 							new Word(" ",Tag.IDE,-1)
 							);
-					error("Esperava encontrar um identificador no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar um identificador no processo de atribuiï¿½ï¿½o, na linha " + lookahead.line, symbSyncronization);
 				}
 				if(getLexeme(lookahead).equals("(") && lookahead.tag == Tag.DEL) {
 					match(lookahead,"(",Tag.DEL);
@@ -1100,7 +1100,7 @@ public class SyntacticAnalyser {
 					if(!functionTableSymbol.contains(new FunctionTableSymbol("", name, "", true))) {
 						functionTableSymbol.put("proc_" + name, new FunctionTableSymbol("proc_" + name, procedure.getName(), procedure.getType(), procedure.isProcedure()));
 					}else
-						System.out.println("Já existe procedure com esse nome");
+						System.out.println("Jï¿½ existe procedure com esse nome");
 					match(lookahead,null,Tag.IDE);
 				}else {
 					List<Token> symbSyncronization = Arrays.asList(
@@ -1262,14 +1262,14 @@ public class SyntacticAnalyser {
 							//lookExpressionVariable.forEach(element -> System.out.println(element.getName() + " "+ element.getScope() + " " + element.getTypeData()));
 							//lookExpressionData.forEach(element -> System.out.println(element.tag + " " + element.line));
 							boolean isOnlyOneType = lookExpression(typeDataTableSymbol.get(function.getType()),false);
-							if(!isOnlyOneType) System.out.println("Não retorna o tipo de dado definido pela função " + function.getName());
+							if(!isOnlyOneType) System.out.println("Nï¿½o retorna o tipo de dado definido pela funï¿½ï¿½o " + function.getName());
 						}else {
-							System.out.println("Erro semântico: O tipo do retorno está incorreto");
+							System.out.println("Erro semï¿½ntico: O tipo do retorno estï¿½ incorreto");
 						}
 					}else if(function.getType() == "string" && lookahead.tag != Tag.CAD) {
 						expression(nameFunction,false);
 						lookExpression(typeDataTableSymbol.get(function.getType()),false);
-						System.out.println("Não retorna o tipo de dado definido pela função");
+						System.out.println("Nï¿½o retorna o tipo de dado definido pela funï¿½ï¿½o");
 					}
 					if(getLexeme(lookahead).equals(";")) {
 						match(lookahead,";",Tag.DEL);
@@ -1278,7 +1278,7 @@ public class SyntacticAnalyser {
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word(";",Tag.DEL,-1)
 					);
-					error("Procedure não pode ter return ( linha " + lookahead.line + " )", symbSyncronization);
+					error("Procedure nï¿½o pode ter return ( linha " + lookahead.line + " )", symbSyncronization);
 					if(getLexeme(lookahead).equals(";")) {
 						match(lookahead,";",Tag.DEL);
 					}
@@ -1546,14 +1546,14 @@ public class SyntacticAnalyser {
 									if(lookahead.tag == Tag.NRO || lookahead.tag == Tag.IDE) {
 										expression(scope,false);
 										boolean isOnlyType = lookExpression(Tag.NRO,false);
-										if(!isOnlyType)System.out.println("Erro semântico: Na declaração de vetores os indices são do tipo int");
+										if(!isOnlyType)System.out.println("Erro semï¿½ntico: Na declaraï¿½ï¿½o de vetores os indices sï¿½o do tipo int");
 									}
 									else {
 										List<Token> symbSyncronization = Arrays.asList(
 												new Word (",", Tag.DEL, -1),
 												new Word ("]", Tag.DEL, -1)
 												);
-										error("Esperava encontrar um identificador ou um número no processo de atribuição de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
+										error("Esperava encontrar um identificador ou um nï¿½mero no processo de atribuiï¿½ï¿½o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
 									}
 									if(getLexeme(lookahead).equals("]")) {
 										match(lookahead, "]", Tag.DEL);
@@ -1564,7 +1564,7 @@ public class SyntacticAnalyser {
 												new Word (",", Tag.DEL, -1),
 												new Word ("[", Tag.DEL, -1)
 												);
-										error("Esperava encontrar um ] processo de atribuição de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
+										error("Esperava encontrar um ] processo de atribuiï¿½ï¿½o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
 									}
 								}
 								else count = 2;
@@ -1608,7 +1608,7 @@ public class SyntacticAnalyser {
 					variableAssign =  variable;
 					assignTo = "global_"+ assignTo;
 				}else {
-					System.out.println("Erro semântico: essa variavel não existe" );
+					System.out.println("Erro semï¿½ntico: essa variavel nï¿½o existe" );
 				}
 			}
 		}
@@ -1621,7 +1621,7 @@ public class SyntacticAnalyser {
 			}else {
 				expression(scope,false);
 				boolean isOnlyType = lookExpression(typeDataTableSymbol.get(variableAssign.getTypeData()),false);
-				if(!isOnlyType) System.out.println("Erro semântico: atribuição com tipos diferentes de dados");
+				if(!isOnlyType) System.out.println("Erro semï¿½ntico: atribuiï¿½ï¿½o com tipos diferentes de dados");
 				else System.out.println("Foi");
 				variable.setInitialized(true);
 				symbolTable.replace(assignTo, variable);
@@ -1651,21 +1651,21 @@ public class SyntacticAnalyser {
 	
 	public void functionCall(String calledBy, String nameFunction, boolean isProcedure){
 		boolean isOnlyOneType = true; 
-		FunctionTableSymbol function; //referência para a função
-		Object typesOfParams[] = null; //referência para os parâmetros da função
+		FunctionTableSymbol function; //referï¿½ncia para a funï¿½ï¿½o
+		Object typesOfParams[] = null; //referï¿½ncia para os parï¿½metros da funï¿½ï¿½o
 		nameFunction = isProcedure ? "proc_"+ nameFunction : "func_" + nameFunction;
 		calledBy = isProcedure ? "proc_"+ calledBy : "func_" + calledBy;
-		//verfica se existe um registro de uma função que contenha o nome passado como parâmetro na tabela de simbolos
+		//verfica se existe um registro de uma funï¿½ï¿½o que contenha o nome passado como parï¿½metro na tabela de simbolos
 		if(functionTableSymbol.containsKey(nameFunction)) {
 			//se estiver executa normalmente
 			function = functionTableSymbol.get(nameFunction);
 		} else {
 			function = null;
-			System.out.println("Não existe essa função " + nameFunction);
+			System.out.println("Nï¿½o existe essa funï¿½ï¿½o " + nameFunction);
 		}
 		if(getLexeme(lookahead).equals("(") && lookahead.tag == Tag.DEL) {
 			match(lookahead,"(",Tag.DEL);
-			//verifica se a função tem ou não parâmetros
+			//verifica se a funï¿½ï¿½o tem ou nï¿½o parï¿½metros
 			if(getLexeme(lookahead).equals(")") && lookahead.tag == Tag.DEL) {
 				if(function != null) {
 					if(!function.getParameters().isEmpty()) System.out.println("Falta colocar os parametros");
@@ -1675,11 +1675,11 @@ public class SyntacticAnalyser {
 				int indexParam = 0;
 				if(function != null) {
 					typesOfParams = functionTableSymbol.get(nameFunction).getParameters().values().toArray();
-					//verifica se a passagem de parâmetros está correta
+					//verifica se a passagem de parï¿½metros estï¿½ correta
 					while(true){
 						if(typeDataTableSymbol.get(typesOfParams[indexParam].toString()) == Tag.CAD) {
 							if(lookahead.tag != Tag.CAD) {
-								 System.out.println("Erro Semântico: parâmetros com tipo diferentes " + nameFunction);
+								 System.out.println("Erro Semï¿½ntico: parï¿½metros com tipo diferentes " + nameFunction);
 								 expression(calledBy,true);
 								 if(lookExpressionData.size() - 1 != indexlookExpressionData && indexlookExpressionData != -1) {
 										lookExpressionData.subList(indexlookExpressionData+1, lookExpressionData.size()).clear();
@@ -1703,7 +1703,7 @@ public class SyntacticAnalyser {
 							}
 						}else {
 							if(lookahead.tag == Tag.CAD) {
-								System.out.println("Erro Semântico: parâmetros com tipo diferentes " + nameFunction);
+								System.out.println("Erro Semï¿½ntico: parï¿½metros com tipo diferentes " + nameFunction);
 								match(lookahead,null,Tag.CAD);
 							}
 							else{
@@ -1711,7 +1711,7 @@ public class SyntacticAnalyser {
 								//lookExpressionData.forEach(element -> System.out.println("e " + element.tag + " " + element.line));
 								//lookExpressionVariable.forEach(element -> System.out.println("v " + element.getName() + " "+ element.getScope() + " " + element.getTypeData()));
 								isOnlyOneType = lookExpression(typeDataTableSymbol.get(typesOfParams[indexParam].toString()),true);
-								if(!isOnlyOneType)System.out.println("Erro Semântico: parâmetros com tipo diferentes (" + nameFunction);
+								if(!isOnlyOneType)System.out.println("Erro Semï¿½ntico: parï¿½metros com tipo diferentes (" + nameFunction);
 							}
 						}
 						if(getLexeme(lookahead).equals(",") && lookahead.tag == Tag.DEL) {
@@ -1722,7 +1722,7 @@ public class SyntacticAnalyser {
 							match(lookahead,")",Tag.DEL);
 							break;
 						}else {
-							//tokens de sincronização para o tratamento de erro sintatico
+							//tokens de sincronizaï¿½ï¿½o para o tratamento de erro sintatico
 							List<Token> symbSyncronization = Arrays.asList(
 									new Word("=",Tag.REL,-1),
 									new Word(";",Tag.DEL,-1),
@@ -1744,15 +1744,15 @@ public class SyntacticAnalyser {
 						}
 					}
 					if(indexParam != typesOfParams.length - 1)
-						System.out.println("Erro! Parâmetros ausentes " + nameFunction + " " + lookahead.line + function.getParameters().size());
+						System.out.println("Erro! Parï¿½metros ausentes " + nameFunction + " " + lookahead.line + function.getParameters().size());
 					if(indexParam > typesOfParams.length + 1)
-						System.out.println("Erro! Parâmetros que não  " + nameFunction + " " + lookahead.line + function.getParameters().size());
+						System.out.println("Erro! Parï¿½metros que nï¿½o  " + nameFunction + " " + lookahead.line + function.getParameters().size());
 					if(!function.isProcedure())
 						lookExpressionVariable.add(new VariableSymbolRow("", function.getName(), "function", true, calledBy, function.getType()));
 				}else {
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word(")", Tag.DEL, -1));
-					error(" Não existe a função", symbSyncronization);
+					error(" Nï¿½o existe a funï¿½ï¿½o", symbSyncronization);
 					match(lookahead,")",Tag.DEL);
 				}
 			}
@@ -1780,7 +1780,7 @@ public class SyntacticAnalyser {
 		if(lookahead.tag == Tag.IDE) {
 			if(isGlobal) {
 				if(!symbolTable.containsKey("global" + "_" + getLexeme(lookahead)))
-					System.out.println("Não existe essa variavel " + getLexeme(lookahead) + " " + lookahead.line);
+					System.out.println("Nï¿½o existe essa variavel " + getLexeme(lookahead) + " " + lookahead.line);
 				else {
 					if(isToAssign)
 						variableAssign = symbolTable.get("global" + "_" + getLexeme(lookahead));	
@@ -1789,7 +1789,7 @@ public class SyntacticAnalyser {
 				}
 			}else {
 				if(!symbolTable.containsKey(scope + "_" + getLexeme(lookahead)))
-					System.out.println("Não existe essa variavel " + getLexeme(lookahead));
+					System.out.println("Nï¿½o existe essa variavel " + getLexeme(lookahead));
 				else {
 					if(isToAssign)
 						variableAssign = symbolTable.get("global" + "_" + getLexeme(lookahead));	
@@ -1864,27 +1864,27 @@ public class SyntacticAnalyser {
 				match(lookahead,null,Tag.IDE);
 				prefixStruct();
 			}else {
-				//verifica se é uma variavel local
+				//verifica se ï¿½ uma variavel local
 				String split[] = scope.split("_");
 				if(split.length == 2){
 					scope = split[1];
 				}
 				if(symbolTable.containsKey(scope + "_" + name)) {
 					lookExpressionVariable.add(symbolTable.get(scope + "_" + name));
-				}else if(symbolTable.containsKey("global" + "_" + name)){ //verifica se é uma variavel global
+				}else if(symbolTable.containsKey("global" + "_" + name)){ //verifica se ï¿½ uma variavel global
 					lookExpressionVariable.add(symbolTable.get("global" + "_" + name));
-				}else if(functionTableSymbol.containsKey("func_" + scope)) { //verifica se é um parâmetro da function
+				}else if(functionTableSymbol.containsKey("func_" + scope)) { //verifica se ï¿½ um parï¿½metro da function
 					if(functionTableSymbol.get("func_" + scope).getParameters().containsKey(name)) {
 						String type = functionTableSymbol.get("func_" + scope).getParameters().get(name);
 						lookExpressionVariable.add(new VariableSymbolRow("", scope, "param", true, scope, type));
 					}
-				}else if(functionTableSymbol.containsKey("proc_" + scope)) {//verifica se é um parâmetro da procedure
+				}else if(functionTableSymbol.containsKey("proc_" + scope)) {//verifica se ï¿½ um parï¿½metro da procedure
 					if(functionTableSymbol.get("proc_" + scope).getParameters().containsKey(name)) {
 						String type = functionTableSymbol.get("proc_" + scope).getParameters().get(name);
 						lookExpressionVariable.add(new VariableSymbolRow("", scope, "param", true, scope, type));
 					}
 				}else {
-					System.out.println("Variavel não existe " + name + " " + lookahead.line);
+					System.out.println("Variavel nï¿½o existe " + name + " " + lookahead.line);
 				}
 				match(lookahead,null,Tag.IDE);
 			}
@@ -1927,7 +1927,7 @@ public class SyntacticAnalyser {
 					new Word("&&",Tag.LOG,-1),
 					new Word("||",Tag.LOG,-1)
 					);
-			error("Esperava encontrar um identificador,número,cadeia de caractéres,true,false,global., local. ou - como valor dentro de uma expressão na linha " + lookahead.line, symbSyncronization);
+			error("Esperava encontrar um identificador,nï¿½mero,cadeia de caractï¿½res,true,false,global., local. ou - como valor dentro de uma expressï¿½o na linha " + lookahead.line, symbSyncronization);
 		}
 	}
 	
@@ -1973,7 +1973,7 @@ public class SyntacticAnalyser {
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word(")",Tag.DEL,-1),
 							new Word(";",Tag.DEL,-1));
-					error("Esperava encontrar uma cadeia de caractéres " + lookahead.line, symbSyncronization);	
+					error("Esperava encontrar uma cadeia de caractï¿½res " + lookahead.line, symbSyncronization);	
 				}
 			}
 			else if(getLexeme(lookahead).equals("!")) {
@@ -1986,7 +1986,7 @@ public class SyntacticAnalyser {
 						List<Token> symbSyncronization = Arrays.asList(
 								new Word(")",Tag.DEL,-1),
 								new Word(";",Tag.DEL,-1));
-						error("Esperava encontrar uma cadeia de caractéres " + lookahead.line, symbSyncronization);	
+						error("Esperava encontrar uma cadeia de caractï¿½res " + lookahead.line, symbSyncronization);	
 					}
 				}else {
 					List<Token> symbSyncronization = Arrays.asList(
