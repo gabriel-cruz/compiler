@@ -23,7 +23,7 @@ public class SyntacticAnalyser {
 	private List<Token> tokens = new ArrayList<Token>();
 	//lista de erros sintaticos
 	private List<String> erros = new ArrayList<String>();
-	// index que controla qual token serï¿½ pego na lista
+	// index que controla qual token serÃ¡ pego na lista
 	private int index = 0;
 	// armazena o token da frente
 	private Token lookahead;
@@ -172,9 +172,9 @@ public class SyntacticAnalyser {
 			lookExpressionData.clear();
 			lookExpressionVariable.clear();
 		}
-		if(!isEqualType) System.out.println("Erro semântico: foi usado valores com o tipo de dado errado");
-		if(!isInitialiazed) System.out.println("Erro semântico: foi usado variaveis que não foram inicializadas");
-		if(!isEqualTypeVariable)System.out.println("Erro semântico: foi usado variaveis com o tipo de dado errado");
+		if(!isEqualType) System.out.println("Erro semÃ¢ntico: foi usado valores com o tipo de dado errado");
+		if(!isInitialiazed) System.out.println("Erro semÃ¢ntico: foi usado variaveis que nÃ£o foram inicializadas");
+		if(!isEqualTypeVariable)System.out.println("Erro semÃ¢ntico: foi usado variaveis com o tipo de dado errado");
 		return isEqualType && isInitialiazed && isEqualTypeVariable;
 	}
 	
@@ -812,11 +812,11 @@ public class SyntacticAnalyser {
 			symbol = new VariableSymbolRow();
 			if(lookahead.tag == Tag.IDE){
 				if(symbolTable.contains(new VariableSymbolRow("", getLexeme(lookahead), "const",false, scope, type)))
-					System.out.println("Erro Semï¿½ntico (const): Jï¿½ existe essa variï¿½vel " + getLexeme(lookahead));
+					System.out.println("Erro SemÃ¢ntico (const): JÃ¡ existe essa variÃ¡vel " + getLexeme(lookahead));
 				else if(existType) 
 					symbol.setName(getLexeme(lookahead));
 				else
-					System.out.println("Erro Semï¿½ntico (const): nï¿½o existe esse tipo de variavel " + type);
+					System.out.println("Erro SemÃ¢ntico (const): nÃ£o existe esse tipo de variavel " + type);
 				match(lookahead, null, Tag.IDE);
 			}else {
 				List<Token> symbSyncronization = Arrays.asList(
@@ -824,7 +824,7 @@ public class SyntacticAnalyser {
 						new Word("=",Tag.REL,-1),
 						new Word(",",Tag.DEL,-1),
 						new Word(";",Tag.DEL,-1));
-				error("Esperava encontrar um identificador no processo de atribuiï¿½ï¿½o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um identificador no processo de atribuiÃ§Ã£o, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(getLexeme(lookahead).equals("=")) {
 				match(lookahead, "=", Tag.REL);
@@ -1162,7 +1162,7 @@ public class SyntacticAnalyser {
 							new Word(" ",Tag.IDE,-1));
 					function.setProcedure(true);
 					System.out.println("Erro no tipo do retorno ");
-					error("Erro Sintático/Semântico: Esperava encontrar um tipo existente no processo de atribuição do retorno da função, na linha " + lookahead.line, symbSyncronization);
+					error("Erro Sintï¿½tico/Semï¿½ntico: Esperava encontrar um tipo existente no processo de atribuiï¿½ï¿½o do retorno da funï¿½ï¿½o, na linha " + lookahead.line, symbSyncronization);
 				}
 				if(lookahead.tag == Tag.IDE) {
 					name = getLexeme(lookahead);
@@ -1201,7 +1201,7 @@ public class SyntacticAnalyser {
 							save.setParameters(function.getParameters());
 							functionTableSymbol.put("func_" + name + "_" + gerador.nextInt(), save);
 						}else {
-							System.out.println("Erro semântico: não é permitido ter uma função com o mesmo nome e parâmetros de uma outra função que já existe");
+							System.out.println("Erro semï¿½ntico: nï¿½o ï¿½ permitido ter uma funï¿½ï¿½o com o mesmo nome e parï¿½metros de uma outra funï¿½ï¿½o que jï¿½ existe");
 						}
 					}
 					//aux.setParameters(function.getParameters());
@@ -1764,7 +1764,7 @@ public class SyntacticAnalyser {
 			}else {
 				expression(scope,false);
 				boolean isOnlyType = lookExpression(typeDataTableSymbol.get(variableAssign.getTypeData()),false);
-				if(!isOnlyType) System.out.println("Erro semântico: expressão de atribuição de maneira errada(variavel não inicializada ou tipo de dado errado)");
+				if(!isOnlyType) System.out.println("Erro semï¿½ntico: expressï¿½o de atribuiï¿½ï¿½o de maneira errada(variavel nï¿½o inicializada ou tipo de dado errado)");
 				if(isStruct) {
 					if(!symbolTable.containsKey(variableAssign.getName())) {
 						symbolTable.put(variableAssign.getName(), variableAssign);
@@ -1997,7 +1997,7 @@ public class SyntacticAnalyser {
 					String typeOfDataAttribute = structTableSymbol.get(structVariable.getTypeData()).getAttributes().get(attribute);
 					variableAssign = new VariableSymbolRow(scope + "_" + nameVariable + "." + attribute,scope + "_" + nameVariable + "." + attribute, "struct", true, scope,typeOfDataAttribute);
 				}else {
-					System.out.println("Erro semântico: não existe esse atributo na struct escolhida");
+					System.out.println("Erro semï¿½ntico: nï¿½o existe esse atributo na struct escolhida");
 				}
 			}else if(!isAssign && structVariable != null) {
 				if(symbolTable.containsKey(scope + "_" + nameVariable + "." + attribute)) {
@@ -2007,7 +2007,7 @@ public class SyntacticAnalyser {
 						String typeOfDataAttribute = structTableSymbol.get(structVariable.getTypeData()).getAttributes().get(attribute);
 						lookExpressionVariable.add(new VariableSymbolRow(scope + "_" + nameVariable + "." + attribute,scope + "_" + nameVariable + "." + attribute, "struct", false, scope,typeOfDataAttribute));
 					}else {
-						System.out.println("Erro semântico: não existe esse atributo na struct escolhida");
+						System.out.println("Erro semï¿½ntico: nï¿½o existe esse atributo na struct escolhida");
 					}
 				}
 			}
