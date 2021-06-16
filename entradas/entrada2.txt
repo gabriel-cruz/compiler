@@ -4,9 +4,15 @@ const{
 	string teste = "certo";
 }
 
+struct pessoa{
+	string pessoa;
+	int idade;
+}
+
 var{
 	int va;
 	boolean ba = false, bb = true;
+	struct pessoa p;
 }
 
 typedef int inteiro;
@@ -15,13 +21,18 @@ function int soma(int a, int b){
 	return a + b;
 }
 
+function int soma(string a, int b){
+	return b;
+}
+
 procedure printError(string error){
 	var{
 		int av = 10, bv = 20, result;
-		boolean vara;
-		string vector[2] = {"da","da"};
+		boolean vara = true;
+		string vector[2][2] = {"da","da"};
 	}
-	av = 20 + 10;
+	p.idade = 10;
+	av = p.idade + 10;
 	result = bv + soma(av+10,bv);
 }
 
