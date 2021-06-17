@@ -23,6 +23,8 @@ public class SyntacticAnalyser {
 	private List<Token> tokens = new ArrayList<Token>();
 	//lista de erros sintaticos
 	private List<String> erros = new ArrayList<String>();
+	//lista de erros semânticos
+	private List<String> semanticErrors = new ArrayList<String>();
 	// index que controla qual token será pego na lista
 	private int index = 0;
 	// armazena o token da frente
@@ -55,6 +57,10 @@ public class SyntacticAnalyser {
 	
 	public List<String> getErros() {
 		return erros;
+	}
+	
+	public List<String> getSemanticErrors(){
+		return semanticErrors;
 	}
 	
 	//m�todo que pega o lexema do token passado como argumento
@@ -172,7 +178,7 @@ public class SyntacticAnalyser {
 			lookExpressionData.clear();
 			lookExpressionVariable.clear();
 		}
-		if(!isEqualType) System.out.println("Erro semântico: foi usado valores com o tipo de dado errado");
+		if(!isEqualType) semanticErrors.add("Erro semântico: este valor não corresponde ao tipo de dado");
 		if(!isInitialiazed) System.out.println("Erro semântico: foi usado variaveis que não foram inicializadas");
 		if(!isEqualTypeVariable)System.out.println("Erro semântico: foi usado variaveis com o tipo de dado errado");
 		return isEqualType && isInitialiazed && isEqualTypeVariable;
@@ -219,7 +225,7 @@ public class SyntacticAnalyser {
 				break;
 			}
 			else{
-				erros.add("N�o encontrou a fun��o principal start");
+				erros.add("Não encontrou a função principal start");
 				break;
 			}
 		}
@@ -377,7 +383,7 @@ public class SyntacticAnalyser {
 			if(lookahead.tag == Tag.IDE) {
 				boolean check = structTableSymbol.contains(new StructTableSymbol("", getLexeme(lookahead)));
 				if(check) {
-					System.out.println("Erro semântico (struct): já existe uma struct com esse nome");
+					semanticErrors.add("Erro semântico (struct): já existe uma struct com esse nome");
 				}
 				else {
 					simbolo.setName(getLexeme(lookahead));
@@ -812,11 +818,11 @@ public class SyntacticAnalyser {
 			symbol = new VariableSymbolRow();
 			if(lookahead.tag == Tag.IDE){
 				if(symbolTable.contains(new VariableSymbolRow("", getLexeme(lookahead), "const",false, scope, type)))
-					System.out.println("Erro Semântico (const): Já existe essa variável " + getLexeme(lookahead));
+					semanticErrors.add("Erro Semântico (const): Já existe essa variável " + getLexeme(lookahead));
 				else if(existType) 
 					symbol.setName(getLexeme(lookahead));
 				else
-					System.out.println("Erro Semântico (const): não existe esse tipo de variavel " + type);
+					semanticErrors.add("Erro Semântico (const): tipo de variável inexistente " + type);
 				match(lookahead, null, Tag.IDE);
 			}else {
 				List<Token> symbSyncronization = Arrays.asList(
@@ -834,14 +840,14 @@ public class SyntacticAnalyser {
 						new Word(" ",Tag.CAD,-1),
 						new Word("true",Tag.PRE,-1),
 						new Word("false",Tag.PRE,-1));
-				error("Esperava encontrar o s�mbolo de = no processo de atribuia��o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o s�mbolo de = no processo de atribuiação, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(lookahead.tag == Tag.NRO || lookahead.tag == Tag.IDE || lookahead.tag == Tag.PRE || getLexeme(lookahead).equals("-")) {
 				if(existType) {
 					expression(scope,false);
 					boolean isOnlyType = lookExpression(typeDataTableSymbol.get(type),false);
 					if(!isOnlyType)
-						System.out.println("Erro Sem�ntico (const): atribui��o errada");
+						semanticErrors.add("Erro Semântico (const): atribuição incorreta");
 				}else {
 					expression(scope,false);
 					lookExpressionData.clear();
@@ -851,7 +857,7 @@ public class SyntacticAnalyser {
 			else if(lookahead.tag == Tag.CAD) {
 				if(existType) {
 					if(typeDataTableSymbol.get(type) != Tag.CAD)
-						System.out.println("Erro Sem�ntico (const): atribui��o errada");
+						semanticErrors.add("Erro Semântico (const): atribuição incorreta");
 					match(lookahead,null,Tag.CAD);
 				}else
 					match(lookahead,null,Tag.CAD);
@@ -861,7 +867,7 @@ public class SyntacticAnalyser {
 						new Word(" ",Tag.NRO,-1),
 						new Word(";",Tag.DEL,-1),
 						new Word(",",Tag.DEL,-1));
-				error("Esperava encontrar um n�mero,identificador,true,false ou uma cadeia de caracteres no processo de atribui��o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um n�mero,identificador,true,false ou uma cadeia de caracteres no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(symbol.getName() != null)
 				symbolTable.put(scope + "_" + symbol.getName(), new VariableSymbolRow(scope + "_" + symbol.getName(), symbol.getName(), "const", true, scope, type));
@@ -886,7 +892,7 @@ public class SyntacticAnalyser {
 						new Word("struct",Tag.PRE,-1),
 						new Word("start",Tag.PRE,-1)
 						);
-				error("Esperava encontrar o s�mbolo de , ou ; no processo de atribui��o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o símbolo de , ou ; no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
 				if(lookahead.tag == Tag.IDE) continue; 
 				else break;
 			}
@@ -904,12 +910,12 @@ public class SyntacticAnalyser {
 				boolean verify =  scope.equals("global") ? symbolTable.contains(new VariableSymbolRow("",getLexeme(lookahead),"const", false, "global", type)) : false;
 				boolean check = symbolTable.contains(new VariableSymbolRow("",getLexeme(lookahead),"var", false, scope, type));
 				if(check || verify) {
-					System.out.println("Erro sem�ntico (var): j� exite variavel com esse nome");
+					semanticErrors.add("Erro semântico (var): já exite variavel com esse nome");
 				}
 				else if(existType) 
 					symbol.setName(getLexeme(lookahead));
 				else
-					System.out.println("Erro Sem�ntico (const): n�o existe esse tipo de variavel " + type);
+					semanticErrors.add("Erro Semântico (const): não existe esse tipo de variavel " + type);
 				match(lookahead, null, Tag.IDE);
 			}
 			else {
@@ -921,7 +927,7 @@ public class SyntacticAnalyser {
 						//new Word ("]", Tag.DEL, -1),
 						new Word (";", Tag.DEL, -1)
 						);
-				error("Esperava encontrar um identificador no processo de atribui��o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um identificador no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(getLexeme(lookahead).equals("[")) {
 				int count = 0;
@@ -932,14 +938,14 @@ public class SyntacticAnalyser {
 						if(lookahead.tag == Tag.NRO || lookahead.tag == Tag.IDE) {
 							expression(scope,false);
 							boolean isOnlyType = lookExpression(Tag.NRO,false);
-							if(!isOnlyType)System.out.println("Erro sem�ntico: Na declara��o de vetores os indices s�o do tipo int");
+							if(!isOnlyType)semanticErrors.add("Erro semântico: Na declaração de vetores os indices são do tipo int");
 						}
 						else {
 							List<Token> symbSyncronization = Arrays.asList(
 									new Word (",", Tag.DEL, -1),
 									new Word ("]", Tag.DEL, -1)
 									);
-							error("Esperava encontrar um identificador ou um n�mero no processo de atribui��o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
+							error("Esperava encontrar um identificador ou um número no processo de atribuição de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
 						}
 						if(getLexeme(lookahead).equals("]")) {
 							match(lookahead, "]", Tag.DEL);
@@ -961,10 +967,10 @@ public class SyntacticAnalyser {
 					if(getLexeme(lookahead).equals("{")) {
 						match(lookahead, "{", Tag.DEL);
 						if(getLexeme(lookahead).equals("{")) {
-							if(dimension == 1) System.out.println("Erro sem�ntico: dimens�o errada da aloca��o de mem�ria");
+							if(dimension == 1) semanticErrors.add("Erro semântico: dimensão errada da alocação de memória");
 							attributeMatrix(scope,type);
 						}else {
-							if(dimension == 2) System.out.println("Erro sem�ntico: dimens�o errada da aloca��o de mem�ria");
+							if(dimension == 2) semanticErrors.add("Erro semântico: dimensão errada da alocação de memória");
 							attributeVector(scope,type);
 						}
 					}
@@ -978,7 +984,7 @@ public class SyntacticAnalyser {
 						symbol.setInitialized(true);
 						boolean isOnlyType = lookExpression(typeDataTableSymbol.get(type),false);
 						if(!isOnlyType)
-							System.out.println("Erro Sem�ntico (const): atribui��o errada");
+							semanticErrors.add("Erro Semântico (const): atribuição incorreta");
 					}else {
 						expression(scope,false);
 						lookExpressionData.clear();
@@ -989,7 +995,7 @@ public class SyntacticAnalyser {
 					if(existType) {
 						symbol.setInitialized(true);
 						if(typeDataTableSymbol.get(type) != Tag.CAD)
-							System.out.println("Erro Sem�ntico (const): atribui��o errada");
+							semanticErrors.add("Erro Semântico (const): atribuição incorreta");
 						match(lookahead,null,Tag.CAD);
 					}else
 						match(lookahead,null,Tag.CAD);
@@ -999,7 +1005,7 @@ public class SyntacticAnalyser {
 							new Word (",", Tag.DEL, -1),
 							new Word (";", Tag.DEL, -1)
 							);
-					error("Esperava encontrar um n�mero, identificador, string ou um boolean no processo de atribui��o, na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar um número, identificador, string ou um boolean no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
 				}
 				
 			}
@@ -1035,7 +1041,7 @@ public class SyntacticAnalyser {
 						new Word("global",Tag.PRE,-1),
 						new Word("local",Tag.PRE,-1)
 						);
-				error("Esperava encontrar o s�mbolo de , ou ; no processo de atribui��o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o símbolo de , ou ; no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
 				if(lookahead.tag == Tag.IDE) continue; 
 				else break;
 			}
@@ -1050,12 +1056,12 @@ public class SyntacticAnalyser {
 		while(true){
 			if(lookahead.tag == Tag.IDE){
 				if(symbol.getAttributes().containsKey(getLexeme(lookahead)))
-					System.out.println("Erro Sem�ntico (struct): J� existe essa vari�vel " + getLexeme(lookahead));
+					semanticErrors.add("Erro Semântico (struct): Já existe essa variável " + getLexeme(lookahead));
 				else if(existType) {
 					symbol.add(getLexeme(lookahead), type);
 				}
 				else
-					System.out.println("Erro Sem�ntico (struct): n�o existe esse tipo de variavel " + type);
+					semanticErrors.add("Erro Semântico (struct): não existe esse tipo de variavel " + type);
 				match(lookahead, null, Tag.IDE);
 			}else {
 				List<Token> symbSyncronization = Arrays.asList(
@@ -1063,7 +1069,7 @@ public class SyntacticAnalyser {
 						new Word("=",Tag.REL,-1),
 						new Word(",",Tag.DEL,-1),
 						new Word(";",Tag.DEL,-1));
-				error("Esperava encontrar um identificador no processo de atribui��o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar um identificador no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
 			}
 			if(getLexeme(lookahead).equals(",")) {
 				match(lookahead,",",Tag.DEL);
@@ -1088,7 +1094,7 @@ public class SyntacticAnalyser {
 						new Word("struct",Tag.PRE,-1),
 						new Word("start",Tag.PRE,-1)
 						);
-				error("Esperava encontrar o s�mbolo de , ou ; no processo de atribui��o, na linha " + lookahead.line, symbSyncronization);
+				error("Esperava encontrar o símbolo de , ou ; no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
 				if(lookahead.tag == Tag.IDE) continue; 
 				else break;
 			}
@@ -1101,19 +1107,19 @@ public class SyntacticAnalyser {
 		while(true) {
 			if(lookahead.tag == Tag.CAD) {
 				if(typeDataTableSymbol.get(type) != Tag.CAD) 
-					System.out.println("Erro sem�ntico: alocagem de informa��o com o tipo de dado errado");
+					semanticErrors.add("Erro semântico: alocagem de informação com o tipo de dado errado");
 				match(lookahead, null, Tag.CAD);
 			}
 			else {
 				if(typeDataTableSymbol.get(type) == Tag.CAD) {
-					System.out.println("Erro sem�ntico: alocagem de informa��o com o tipo de dado errado");
+					semanticErrors.add("Erro semântico: alocagem de informação com o tipo de dado errado");
 					expression(scope,false);	
 					lookExpressionData.clear();
 					lookExpressionVariable.clear();
 				}else {
 					expression(scope,false);	
 					boolean isOnlyType = lookExpression(typeDataTableSymbol.get(type),false);
-					if(!isOnlyType) System.out.println("Erro sem�ntico: alocagem de informa��o com o tipo de dado errado");
+					if(!isOnlyType) semanticErrors.add("Erro semântico: alocagem de informação com o tipo de dado errado");
 				}
 			}
 			if(getLexeme(lookahead).equals(",")) {
@@ -1162,7 +1168,7 @@ public class SyntacticAnalyser {
 							new Word(" ",Tag.IDE,-1));
 					function.setProcedure(true);
 					System.out.println("Erro no tipo do retorno ");
-					error("Erro Sint�tico/Sem�ntico: Esperava encontrar um tipo existente no processo de atribui��o do retorno da fun��o, na linha " + lookahead.line, symbSyncronization);
+					error("Erro Sintático/Semântico: Esperava encontrar um tipo existente no processo de atribuição do retorno da função, na linha " + lookahead.line, symbSyncronization);
 				}
 				if(lookahead.tag == Tag.IDE) {
 					name = getLexeme(lookahead);
@@ -1180,7 +1186,7 @@ public class SyntacticAnalyser {
 							new Word("(",Tag.DEL,-1),
 							new Word(" ",Tag.IDE,-1)
 							);
-					error("Esperava encontrar um identificador no processo de atribui��o, na linha " + lookahead.line, symbSyncronization);
+					error("Esperava encontrar um identificador no processo de atribuição, na linha " + lookahead.line, symbSyncronization);
 				}
 				if(getLexeme(lookahead).equals("(") && lookahead.tag == Tag.DEL) {
 					match(lookahead,"(",Tag.DEL);
@@ -1201,7 +1207,7 @@ public class SyntacticAnalyser {
 							save.setParameters(function.getParameters());
 							functionTableSymbol.put("func_" + name + "_" + gerador.nextInt(), save);
 						}else {
-							System.out.println("Erro sem�ntico: n�o � permitido ter uma fun��o com o mesmo nome e par�metros de uma outra fun��o que j� existe");
+							semanticErrors.add("Erro semântico: não é permitido ter uma função com o mesmo nome e parâetros de uma outra função que já existe");
 						}
 					}
 					//aux.setParameters(function.getParameters());
@@ -1239,7 +1245,7 @@ public class SyntacticAnalyser {
 					if(!functionTableSymbol.contains(new FunctionTableSymbol("", name, "", true))) {
 						functionTableSymbol.put("proc_" + name, new FunctionTableSymbol("proc_" + name, procedure.getName(), procedure.getType(), procedure.isProcedure()));
 					}else
-						System.out.println("J� existe procedure com esse nome");
+						System.out.println("Já existe procedure com esse nome");
 					match(lookahead,null,Tag.IDE);
 				}else {
 					List<Token> symbSyncronization = Arrays.asList(
@@ -1403,12 +1409,12 @@ public class SyntacticAnalyser {
 							boolean isOnlyOneType = lookExpression(typeDataTableSymbol.get(function.getType()),false);
 							if(!isOnlyOneType) System.out.println("N�o retorna o tipo de dado definido pela fun��o " + function.getName());
 						}else {
-							System.out.println("Erro sem�ntico: O tipo do retorno est� incorreto");
+							semanticErrors.add("Erro semântico: O tipo do retorno está incorreto");
 						}
 					}else if(function.getType() == "string" && lookahead.tag != Tag.CAD) {
 						expression(nameFunction,false);
 						lookExpression(typeDataTableSymbol.get(function.getType()),false);
-						System.out.println("N�o retorna o tipo de dado definido pela fun��o");
+						System.out.println("Não retorna o tipo de dado definido pela função");
 					}
 					if(getLexeme(lookahead).equals(";")) {
 						match(lookahead,";",Tag.DEL);
@@ -1417,7 +1423,7 @@ public class SyntacticAnalyser {
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word(";",Tag.DEL,-1)
 					);
-					error("Procedure n�o pode ter return ( linha " + lookahead.line + " )", symbSyncronization);
+					error("Procedure não pode ter return ( linha " + lookahead.line + " )", symbSyncronization);
 					if(getLexeme(lookahead).equals(";")) {
 						match(lookahead,";",Tag.DEL);
 					}
@@ -1689,14 +1695,14 @@ public class SyntacticAnalyser {
 									if(lookahead.tag == Tag.NRO || lookahead.tag == Tag.IDE) {
 										expression(scope,false);
 										boolean isOnlyType = lookExpression(Tag.NRO,false);
-										if(!isOnlyType)System.out.println("Erro sem�ntico: Na declara��o de vetores os indices s�o do tipo int");
+										if(!isOnlyType)semanticErrors.add("Erro semântico: Na declaração de vetores os indices são do tipo int");
 									}
 									else {
 										List<Token> symbSyncronization = Arrays.asList(
 												new Word (",", Tag.DEL, -1),
 												new Word ("]", Tag.DEL, -1)
 												);
-										error("Esperava encontrar um identificador ou um n�mero no processo de atribui��o de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
+										error("Esperava encontrar um identificador ou um número no processo de atribuição de vetor ou matriz, na linha " + lookahead.line, symbSyncronization);
 									}
 									if(getLexeme(lookahead).equals("]")) {
 										match(lookahead, "]", Tag.DEL);
@@ -1751,7 +1757,7 @@ public class SyntacticAnalyser {
 					variableAssign =  variable;
 					assignTo = "global_"+ assignTo;
 				}else {
-					System.out.println("Erro sem�ntico: essa variavel n�o existe" );
+					semanticErrors.add("Erro semântico: essa variavel não existe" );
 				}
 			}
 		}
@@ -1764,7 +1770,7 @@ public class SyntacticAnalyser {
 			}else {
 				expression(scope,false);
 				boolean isOnlyType = lookExpression(typeDataTableSymbol.get(variableAssign.getTypeData()),false);
-				if(!isOnlyType) System.out.println("Erro sem�ntico: express�o de atribui��o de maneira errada(variavel n�o inicializada ou tipo de dado errado)");
+				if(!isOnlyType) semanticErrors.add("Erro semântico: expressão de atribuição de maneira errada(variavel não inicializada ou tipo de dado errado)");
 				if(isStruct) {
 					if(!symbolTable.containsKey(variableAssign.getName())) {
 						symbolTable.put(variableAssign.getName(), variableAssign);
@@ -1811,7 +1817,7 @@ public class SyntacticAnalyser {
 			function = functionTableSymbol.get(nameFunction);
 		} else {
 			function = null;
-			System.out.println("N�o existe essa fun��o " + nameFunction);
+			System.out.println("Não existe essa função " + nameFunction);
 		}
 		if(getLexeme(lookahead).equals("(") && lookahead.tag == Tag.DEL) {
 			match(lookahead,"(",Tag.DEL);
@@ -1830,7 +1836,7 @@ public class SyntacticAnalyser {
 					while(true){
 						if(typeDataTableSymbol.get(typesOfParams[indexParam].toString()) == Tag.CAD) {
 							if(lookahead.tag != Tag.CAD) {
-								 System.out.println("Erro Sem�ntico: par�metros com tipo diferentes " + nameFunction);
+								semanticErrors.add("Erro Semântico: parâmetros com tipos diferentes " + nameFunction);
 								 expression(calledBy,true);
 								 if(lookExpressionData.size() - 1 != indexlookExpressionData && indexlookExpressionData != -1) {
 										lookExpressionData.subList(indexlookExpressionData+1, lookExpressionData.size()).clear();
@@ -1854,7 +1860,7 @@ public class SyntacticAnalyser {
 							}
 						}else {
 							if(lookahead.tag == Tag.CAD) {
-								System.out.println("Erro Sem�ntico: par�metros com tipo diferentes " + nameFunction);
+								semanticErrors.add("Erro Semântico: parâmetros com tipos diferentes " + nameFunction);
 								match(lookahead,null,Tag.CAD);
 							}
 							else{
@@ -1862,7 +1868,7 @@ public class SyntacticAnalyser {
 								//lookExpressionData.forEach(element -> System.out.println("e " + element.tag + " " + element.line));
 								//lookExpressionVariable.forEach(element -> System.out.println("v " + element.getName() + " "+ element.getScope() + " " + element.getTypeData()));
 								isOnlyOneType = lookExpression(typeDataTableSymbol.get(typesOfParams[indexParam].toString()),true);
-								if(!isOnlyOneType)System.out.println("Erro Sem�ntico: par�metros com tipo diferentes (" + nameFunction);
+								if(!isOnlyOneType)semanticErrors.add("Erro Semântico: parâmetros com tipos diferentes (" + nameFunction);
 							}
 						}
 						if(getLexeme(lookahead).equals(",") && lookahead.tag == Tag.DEL) {
@@ -1895,15 +1901,15 @@ public class SyntacticAnalyser {
 						}
 					}
 					if(indexParam != typesOfParams.length - 1)
-						System.out.println("Erro! Par�metros ausentes " + nameFunction + " " + lookahead.line + function.getParameters().size());
+						System.out.println("Erro! Parâmetros ausentes " + nameFunction + " " + lookahead.line + function.getParameters().size());
 					if(indexParam > typesOfParams.length + 1)
-						System.out.println("Erro! Par�metros que n�o  " + nameFunction + " " + lookahead.line + function.getParameters().size());
+						System.out.println("Erro! Parâmetros que n�o  " + nameFunction + " " + lookahead.line + function.getParameters().size());
 					if(!function.isProcedure())
 						lookExpressionVariable.add(new VariableSymbolRow("", function.getName(), "function", true, calledBy, function.getType()));
 				}else {
 					List<Token> symbSyncronization = Arrays.asList(
 							new Word(")", Tag.DEL, -1));
-					error(" N�o existe a fun��o", symbSyncronization);
+					error(" Não existe a função", symbSyncronization);
 					match(lookahead,")",Tag.DEL);
 				}
 			}
@@ -1931,7 +1937,7 @@ public class SyntacticAnalyser {
 		if(lookahead.tag == Tag.IDE) {
 			if(isGlobal) {
 				if(!symbolTable.containsKey("global" + "_" + getLexeme(lookahead)))
-					System.out.println("N�o existe essa variavel " + getLexeme(lookahead) + " " + lookahead.line);
+					System.out.println("Não existe essa variavel " + getLexeme(lookahead) + " " + lookahead.line);
 				else {
 					if(isToAssign)
 						variableAssign = symbolTable.get("global" + "_" + getLexeme(lookahead));	
@@ -1940,7 +1946,7 @@ public class SyntacticAnalyser {
 				}
 			}else {
 				if(!symbolTable.containsKey(scope + "_" + getLexeme(lookahead)))
-					System.out.println("N�o existe essa variavel " + getLexeme(lookahead));
+					System.out.println("Não existe essa variavel " + getLexeme(lookahead));
 				else {
 					if(isToAssign)
 						variableAssign = symbolTable.get("global" + "_" + getLexeme(lookahead));	
@@ -1986,7 +1992,7 @@ public class SyntacticAnalyser {
 				structVariable =  new VariableSymbolRow("", scope, "param", true, scope, type);
 			}
 		}else {
-			System.out.println("Variavel n�o existe " + nameVariable + " " + lookahead.line);
+			System.out.println("Variavel não existe " + nameVariable + " " + lookahead.line);
 		}
 		match(lookahead,".",Tag.DEL);
 		if(lookahead.tag == Tag.IDE) {
@@ -1997,7 +2003,7 @@ public class SyntacticAnalyser {
 					String typeOfDataAttribute = structTableSymbol.get(structVariable.getTypeData()).getAttributes().get(attribute);
 					variableAssign = new VariableSymbolRow(scope + "_" + nameVariable + "." + attribute,scope + "_" + nameVariable + "." + attribute, "struct", true, scope,typeOfDataAttribute);
 				}else {
-					System.out.println("Erro sem�ntico: n�o existe esse atributo na struct escolhida");
+					semanticErrors.add("Erro semântico: não existe esse atributo nesta struct");
 				}
 			}else if(!isAssign && structVariable != null) {
 				if(symbolTable.containsKey(scope + "_" + nameVariable + "." + attribute)) {
@@ -2007,7 +2013,7 @@ public class SyntacticAnalyser {
 						String typeOfDataAttribute = structTableSymbol.get(structVariable.getTypeData()).getAttributes().get(attribute);
 						lookExpressionVariable.add(new VariableSymbolRow(scope + "_" + nameVariable + "." + attribute,scope + "_" + nameVariable + "." + attribute, "struct", false, scope,typeOfDataAttribute));
 					}else {
-						System.out.println("Erro sem�ntico: n�o existe esse atributo na struct escolhida");
+						semanticErrors.add("Erro semântico: não existe esse atributo na struct escolhida");
 					}
 				}
 			}
@@ -2073,7 +2079,7 @@ public class SyntacticAnalyser {
 						lookExpressionVariable.add(new VariableSymbolRow("", scope, "param", true, scope, type));
 					}
 				}else {
-					System.out.println("Variavel n�o existe " + name + " " + lookahead.line);
+					System.out.println("Variavel não existe " + name + " " + lookahead.line);
 				}
 				match(lookahead,null,Tag.IDE);
 			}
